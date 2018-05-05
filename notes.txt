@@ -1,0 +1,6 @@
+add password manager
+release beta version 2
+add backup manager
+release beta version 3
+
+credit for line wrapping in JTextPane: http://java-sl.com/wrap.html
