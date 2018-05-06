@@ -1,11 +1,13 @@
 package com.caucraft.mciguiv3.gamefiles.profiles;
 
 import com.caucraft.mciguiv3.json.JsonConfig;
+import com.caucraft.mciguiv3.launch.Launcher;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.logging.Level;
 
 /**
  *
@@ -31,7 +33,9 @@ public class AuthenticationDatabase {
                     AuthenticatedUser user = new AuthenticatedUser(json.getSubConfig("[\"" + s + "\"]"));
                     userMap.put(s, user);
                     nameMap.put(user.getDisplayName(), s);
-                } catch (Exception e) {}
+                } catch (Exception e) {
+                    Launcher.LOGGER.log(Level.WARNING, "Could not load user profile", e);
+                }
             });
         }
     }
