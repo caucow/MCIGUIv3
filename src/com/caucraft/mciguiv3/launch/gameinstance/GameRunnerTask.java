@@ -157,7 +157,7 @@ public class GameRunnerTask extends TaskList {
                     properties.put("natives_directory", nativeDir.getPath());
                     properties.put("classpath", classPath.toString());
                     
-                    List<String> gameArgs = version.getArgumentParser().compile(javaExe.getPath(), Arrays.asList(extraJvmArgs.split(" ")), properties, null);
+                    List<String> gameArgs = version.getArgumentParser().compile(javaExe.getPath(), extraJvmArgs == null ? null : Arrays.asList(extraJvmArgs.split(" ")), properties, null);
                     
                     GameMonitor gmon = new GameMonitor(logPanel, logger, launcher, gameArgs, gameDir, nativeDir, GameRunnerTask.this.launchInfo);
                     gmon.start();

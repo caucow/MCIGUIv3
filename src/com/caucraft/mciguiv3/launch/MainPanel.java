@@ -479,9 +479,12 @@ public class MainPanel extends RandomTexturedPanel {
             jvmArgsCheckbox.setSelected(true);
             jvmArgsTextField.setText(jvmArgs);
         }
-        snapshotsCheckbox.setSelected(prof.getAllowedReleaseTypes().contains("snapshot"));
-        betaCheckbox.setSelected(prof.getAllowedReleaseTypes().contains("old_beta"));
-        alphaCheckbox.setSelected(prof.getAllowedReleaseTypes().contains("old_alpha"));
+        Set<String> allowedReleaseTypes = prof.getAllowedReleaseTypes();
+        if (allowedReleaseTypes != null) {
+            snapshotsCheckbox.setSelected(allowedReleaseTypes.contains("snapshot"));
+            betaCheckbox.setSelected(allowedReleaseTypes.contains("old_beta"));
+            alphaCheckbox.setSelected(allowedReleaseTypes.contains("old_alpha"));
+        }
         
         loadVersions();
         
@@ -499,6 +502,8 @@ public class MainPanel extends RandomTexturedPanel {
         snapshotsCheckbox.setEnabled(true);
         betaCheckbox.setEnabled(true);
         alphaCheckbox.setEnabled(true);
+        
+        launcher.reloadAuthDisplay(false);
     }
     
     public void loadVersions() {
@@ -514,7 +519,7 @@ public class MainPanel extends RandomTexturedPanel {
         versionButtonGroup = new ButtonGroup();
         versionPanel.removeAll();
         for (GameVersion v : vers) {
-            if (!allowedReleaseTypes.contains(v.getType())) {
+            if (!"release".equals(v.getType()) && (allowedReleaseTypes == null || !allowedReleaseTypes.contains(v.getType()))) {
                 continue;
             }
             JCheckBox verRb = new JCheckBox(v.getId());
@@ -540,7 +545,7 @@ public class MainPanel extends RandomTexturedPanel {
             launcher.getProfiles().getSelectedProfile().setLastVersionId(
                     ((JCheckBox)e.getSource()).getText()
             );
-            launcher.reloadAuth(false);
+            launcher.reloadAuthDisplay(false);
         };
         return versionListener;
     }
