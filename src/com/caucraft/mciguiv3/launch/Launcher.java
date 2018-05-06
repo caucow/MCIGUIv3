@@ -66,7 +66,7 @@ import javax.swing.JPanel;
 public final class Launcher {
     
     public static final File LAUNCHER_JARFILE = getJarFile();
-    public static final String LAUNCHER_VERSION = "3.0.0";
+    public static final String LAUNCHER_VERSION = "3.0.1";
     public static final Logger LOGGER;
     public static final String UPDATE_URL = "https://dl.dropboxusercontent.com/s/j0nojtozbohm1qj/versions.JSON";
     public static final int VERSION = 21;
