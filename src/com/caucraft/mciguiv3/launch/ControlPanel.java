@@ -117,7 +117,7 @@ public class ControlPanel extends RandomTexturedPanel {
         this.repaint();
     }
     
-    public void reloadAuth(boolean setUser) {
+    public void reloadAuthDisplay(boolean setUser) {
         LauncherConfig config = launcher.getConfig();
         LauncherProfiles profiles = launcher.getProfiles();
         VersionManager versions = launcher.getVersionManager();
@@ -151,14 +151,14 @@ public class ControlPanel extends RandomTexturedPanel {
         });
         this.playOfflineCheckbox.addActionListener((ActionEvent e) -> {
             launcher.getConfig().setOfflineMode(playOfflineCheckbox.isSelected());
-            launcher.reloadAuth(false);
+            launcher.reloadAuthDisplay(false);
         });
         this.usernameTextField.getDocument().addUndoableEditListener((UndoableEditEvent e) -> {
             if (!usernameTextField.isEnabled()) {
                 return;
             }
             launcher.getConfig().setOfflineName(usernameTextField.getText());
-            launcher.reloadAuth(false);
+            launcher.reloadAuthDisplay(false);
         });
         this.launchButton.addActionListener((ActionEvent e) -> {
             launcher.launchGame();

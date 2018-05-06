@@ -194,7 +194,7 @@ public class AuthPanel extends RandomTexturedPanel {
                         launcher.getProfiles().setSelectedUser(newUser);
                         launcher.getConfig().setOfflineMode(false);
                         launcher.getConfig().setOfflineName(newUser.getDisplayName());
-                        launcher.reloadAuth(true);
+                        launcher.reloadAuthDisplay(true);
                         launcher.getConfig().save();
                         launcher.getProfiles().save(true);
                     } catch (IOException e) {
@@ -279,7 +279,7 @@ public class AuthPanel extends RandomTexturedPanel {
                         launcher.getProfiles().setSelectedUser(newUser);
                         launcher.getConfig().setOfflineMode(false);
                         launcher.getConfig().setOfflineName(newUser.getDisplayName());
-                        launcher.reloadAuth(true);
+                        launcher.reloadAuthDisplay(true);
                         launcher.getConfig().save();
                         launcher.getProfiles().save(true);
                     } catch (IOException e) {
@@ -307,7 +307,7 @@ public class AuthPanel extends RandomTexturedPanel {
             launcher.getConfig().setOfflineMode(true);
             launcher.getConfig().setOfflineName(userTextField.getText());
             launcher.setCurrentScreen(launcher.getLauncherPanel());
-            launcher.reloadAuth(true);
+            launcher.reloadAuthDisplay(true);
         });
         this.cancelButton.addActionListener((e) -> {
             launcher.setCurrentScreen(launcher.getLauncherPanel());
