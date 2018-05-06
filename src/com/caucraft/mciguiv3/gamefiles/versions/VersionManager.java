@@ -1,12 +1,14 @@
 package com.caucraft.mciguiv3.gamefiles.versions;
 
 import com.caucraft.mciguiv3.gamefiles.versions.manifest.VersionManifest;
+import com.caucraft.mciguiv3.launch.Launcher;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeSet;
+import java.util.logging.Level;
 
 /**
  *
@@ -33,7 +35,10 @@ public class VersionManager {
                             mcHome,
                             ver.getName());
                     versionMap.put(gameVer.getId(), gameVer);
-                } catch (IOException e) {}
+                } catch (IOException e) {
+                } catch (Exception e) {
+                    Launcher.LOGGER.log(Level.WARNING, "Could not load version " + ver.getName(), e);
+                }
             }
         }
     }
