@@ -30,7 +30,15 @@ public class AuthenticatedUser {
     
     public AuthenticatedUser(JsonConfig json) {
         this.json = json;
-        this.uuid = Objects.requireNonNull(UUID.fromString(json.getString("uuid", null)));
+        String uuidStr = Objects.requireNonNull(json.getString("uuid", null));
+        this.uuid = uuidStr.length() == 32 ?
+                UUID.fromString(
+                        uuidStr.substring(0, 8)
+                                + '-' + uuidStr.substring(8, 12)
+                                + '-' + uuidStr.substring(12, 16)
+                                + '-' + uuidStr.substring(16, 20)
+                                + '-' + uuidStr.substring(20, 32))
+                : UUID.fromString(uuidStr);
         this.displayName = Objects.requireNonNull(json.getString("displayName", null));
         this.accessToken = Objects.requireNonNull(json.getString("accessToken", null));
         this.userId = Objects.requireNonNull(json.getString("userid", null));
