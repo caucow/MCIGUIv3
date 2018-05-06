@@ -678,6 +678,7 @@ public final class Launcher {
                         setLoggedInOnce();
                         profiles.getAuthDb().addUser(usera[0]);
                         reloadAuthDisplay(true);
+                        profiles.save(true);
                         LOGGER.log(Level.INFO, "Refreshed {0}''s access token", usera[0].getDisplayName());
                     } catch (IOException e) {
                         LOGGER.log(Level.WARNING, "Could not connect to Mojang's servers: {0}: {1}", new Object[] {e.getClass().getSimpleName(), e.getMessage()});
@@ -710,6 +711,7 @@ public final class Launcher {
                         setLoggedInOnce();
                         profiles.getAuthDb().addUser(usera[0]);
                         reloadAuthDisplay(true);
+                        profiles.save(true);
                         LOGGER.log(Level.INFO, "Logged in as {0}", usera[0].getDisplayName());
                     } catch (IOException e) {
                         LOGGER.log(Level.WARNING, "Could not connect to Mojang's servers: {0}: {1}", new Object[] {e.getClass().getSimpleName(), e.getMessage()});
@@ -883,6 +885,7 @@ public final class Launcher {
                         setLoggedInOnce();
                         profiles.getAuthDb().addUser(usera[0]);
                         reloadAuthDisplay(true);
+                        profiles.save(true);
                         LOGGER.log(Level.INFO, "Refreshed {0}''s access token", usera[0].getDisplayName());
                     } catch (IOException e) {
                         LOGGER.log(Level.WARNING, "Could not connect to Mojang's servers: {0}: {1}", new Object[] {e.getClass().getSimpleName(), e.getMessage()});
@@ -915,6 +918,7 @@ public final class Launcher {
                         setLoggedInOnce();
                         profiles.getAuthDb().addUser(usera[0]);
                         reloadAuthDisplay(true);
+                        profiles.save(true);
                         LOGGER.log(Level.INFO, "Logged in as {0}", usera[0].getDisplayName());
                     } catch (IOException e) {
                         LOGGER.log(Level.WARNING, "Could not connect to Mojang's servers: {0}: {1}", new Object[] {e.getClass().getSimpleName(), e.getMessage()});

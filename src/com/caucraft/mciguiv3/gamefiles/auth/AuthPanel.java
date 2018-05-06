@@ -139,6 +139,12 @@ public class AuthPanel extends RandomTexturedPanel {
                         if (Authenticator.validateAccessToken(launcher.getProfiles().getClientToken(), user)) {
                             loggedIn.set(true);
                             launcher.setLoggedInOnce();
+                            launcher.getProfiles().setSelectedUser(user);
+                            launcher.getConfig().setOfflineMode(false);
+                            launcher.getConfig().setOfflineName(user.getDisplayName());
+                            launcher.reloadAuthDisplay(true);
+                            launcher.getConfig().save();
+                            launcher.getProfiles().save(true);
                         } else {
                             statusLabel.setText("<html><center>Invalid access token.</center></html>");
                         }
@@ -164,6 +170,11 @@ public class AuthPanel extends RandomTexturedPanel {
                         loggedIn.set(true);
                         launcher.setLoggedInOnce();
                         launcher.getProfiles().setSelectedUser(newUser);
+                        launcher.getConfig().setOfflineMode(false);
+                        launcher.getConfig().setOfflineName(newUser.getDisplayName());
+                        launcher.reloadAuthDisplay(true);
+                        launcher.getConfig().save();
+                        launcher.getProfiles().save(true);
                     } catch (IOException e) {
                         statusLabel.setText(String.format("<html><center>Unable to connect to Mojang's servers.<BR>%s: %s</center></html>", e.getClass().getSimpleName(), e.getMessage()));
                         throw e;
