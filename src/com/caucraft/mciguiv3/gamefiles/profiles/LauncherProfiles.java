@@ -59,7 +59,7 @@ public class LauncherProfiles {
             this.selectedUser = newUser;
             hasChanged = false;
         } catch (Exception e) {
-            e.printStackTrace();
+            Launcher.LOGGER.log(Level.WARNING, "Unable to load launcher profiles", e);
         }
     }
     
