@@ -83,6 +83,8 @@ public final class Launcher {
         System.setProperty("java.util.logging.SimpleFormatter.format",
                 "[%1$tT] [%4$s] %5$s%6$s%n");
         LOGGER = Logger.getLogger("launcher");
+        Thread.setDefaultUncaughtExceptionHandler(new LauncherExceptionLogger());
+        System.setProperty("sun.awt.exception.handler", LauncherExceptionLogger.class.getName());
         FILL_CONSTRAINTS = new GridBagConstraints(1, 1, 1, 1, 1.0, 1.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0);
         String osname = System.getProperty("os.name").toLowerCase();
         if (osname.contains("windows")) {
@@ -170,7 +172,7 @@ public final class Launcher {
     }
     
     private static void ensureClassesLoaded() {
-        if (LAUNCHER_JARFILE == null) {
+        if (LAUNCHER_JARFILE == null || !LAUNCHER_JARFILE.exists()) {
             return;
         }
         try (JarFile jar = new JarFile(LAUNCHER_JARFILE)) {
@@ -325,7 +327,7 @@ public final class Launcher {
         
         setCurrentScreen(launcherPanel);
         mainPanel.loadProfiles();
-        reloadAuth(true);
+        reloadAuthDisplay(true);
         mainWindow.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -539,8 +541,8 @@ public final class Launcher {
         mainPanel.loadVersions();
     }
     
-    public void reloadAuth(boolean setUser) {
-        launcherPanel.getControlPanel().reloadAuth(setUser);
+    public void reloadAuthDisplay(boolean setUser) {
+        launcherPanel.getControlPanel().reloadAuthDisplay(setUser);
     }
     
     public void selectAccount() {
@@ -675,7 +677,7 @@ public final class Launcher {
                         loggedIn.set(true);
                         setLoggedInOnce();
                         profiles.getAuthDb().addUser(usera[0]);
-                        reloadAuth(true);
+                        reloadAuthDisplay(true);
                         LOGGER.log(Level.INFO, "Refreshed {0}''s access token", usera[0].getDisplayName());
                     } catch (IOException e) {
                         LOGGER.log(Level.WARNING, "Could not connect to Mojang's servers: {0}: {1}", new Object[] {e.getClass().getSimpleName(), e.getMessage()});
@@ -707,7 +709,7 @@ public final class Launcher {
                         loggedIn.set(true);
                         setLoggedInOnce();
                         profiles.getAuthDb().addUser(usera[0]);
-                        reloadAuth(true);
+                        reloadAuthDisplay(true);
                         LOGGER.log(Level.INFO, "Logged in as {0}", usera[0].getDisplayName());
                     } catch (IOException e) {
                         LOGGER.log(Level.WARNING, "Could not connect to Mojang's servers: {0}: {1}", new Object[] {e.getClass().getSimpleName(), e.getMessage()});
@@ -804,6 +806,32 @@ public final class Launcher {
     }
     
     public void installVersions() {
+        Task mainTask = new Task("Preparing to install versions") {
+            @Override
+            public float getProgress() {
+                return -1.0F;
+            }
+
+            @Override
+            public void run() {
+                if (!getLoggedInOnce()) {
+                    JOptionPane.showMessageDialog(mainWindow, "You must be logged in to install new versions.");
+                    return;
+                }
+                VersionManifest manifest;
+                try {
+                    manifest = VersionManifest.getVersionManifest();
+                } catch (IOException e) {
+                    JOptionPane.showMessageDialog(mainWindow, "Could not connect to Mojang's servers.");
+                    return;
+                }
+                ManifestViewerDialog mfViewer = new ManifestViewerDialog(mainWindow, manifest);
+                List<ManifestGameVersion> vers = mfViewer.getVersions();
+                if (!vers.isEmpty()) {
+                    installVersionJsons(getMcHome(), manifest, vers, new ArrayList<>());
+                }
+            }
+        };
         if (!getLoggedInOnce()) {
             TaskList authTaskList = new TaskList("Logging in as existing user");
             AtomicBoolean loggedIn = new AtomicBoolean(getLoggedInOnce());
@@ -854,7 +882,7 @@ public final class Launcher {
                         loggedIn.set(true);
                         setLoggedInOnce();
                         profiles.getAuthDb().addUser(usera[0]);
-                        reloadAuth(true);
+                        reloadAuthDisplay(true);
                         LOGGER.log(Level.INFO, "Refreshed {0}''s access token", usera[0].getDisplayName());
                     } catch (IOException e) {
                         LOGGER.log(Level.WARNING, "Could not connect to Mojang's servers: {0}: {1}", new Object[] {e.getClass().getSimpleName(), e.getMessage()});
@@ -886,39 +914,13 @@ public final class Launcher {
                         loggedIn.set(true);
                         setLoggedInOnce();
                         profiles.getAuthDb().addUser(usera[0]);
-                        reloadAuth(true);
+                        reloadAuthDisplay(true);
                         LOGGER.log(Level.INFO, "Logged in as {0}", usera[0].getDisplayName());
                     } catch (IOException e) {
                         LOGGER.log(Level.WARNING, "Could not connect to Mojang's servers: {0}: {1}", new Object[] {e.getClass().getSimpleName(), e.getMessage()});
                         throw e;
                     } catch (ForbiddenOperationException e) {
                         LOGGER.log(Level.INFO, "Could not log in as {0} with user/pass: {1}", new Object[]{usera[0].getUsername(), e.getMessage()});
-                    }
-                }
-            };
-            Task mainTask = new Task("Preparing to install versions") {
-                @Override
-                public float getProgress() {
-                    return -1.0F;
-                }
-                
-                @Override
-                public void run() {
-                    if (!getLoggedInOnce()) {
-                        JOptionPane.showMessageDialog(mainWindow, "You must be logged in to install new versions.");
-                        return;
-                    }
-                    VersionManifest manifest;
-                    try {
-                        manifest = VersionManifest.getVersionManifest();
-                    } catch (IOException e) {
-                        JOptionPane.showMessageDialog(mainWindow, "Could not connect to Mojang's servers.");
-                        return;
-                    }
-                    ManifestViewerDialog mfViewer = new ManifestViewerDialog(mainWindow, manifest);
-                    List<ManifestGameVersion> vers = mfViewer.getVersions();
-                    if (!vers.isEmpty()) {
-                        installVersionJsons(getMcHome(), manifest, vers, new ArrayList<>());
                     }
                 }
             };
@@ -938,6 +940,8 @@ public final class Launcher {
             authTaskList.addTask(loginTask);
             authTaskList.addTask(startTask);
             authTaskMgr.addTask(authTaskList);
+        } else {
+            mainTaskMgr.addTask(mainTask);
         }
     }
     
@@ -1037,5 +1041,14 @@ public final class Launcher {
             return chooser.getSelectedFile();
         }
         return null;
+    }
+    
+    private static class LauncherExceptionLogger implements Thread.UncaughtExceptionHandler {
+
+        @Override
+        public void uncaughtException(Thread t, Throwable e) {
+            LOGGER.log(Level.WARNING, "Problem in thread " + t.getName(), e);
+        }
+        
     }
 }
