@@ -152,6 +152,7 @@ public class GameVersion implements Comparable<GameVersion> {
         ver.id = Objects.requireNonNull(json.getString("id", null));
         ver.mainClass = Objects.requireNonNull(json.getString("mainClass", null));
         ver.minimumLauncherVersion = json.getInt("minimumLauncherVersion", 21);
+        ver.inheritsFrom = json.getString("inheritsFrom", null);
         if (ver.minimumLauncherVersion > Launcher.VERSION) {
             Launcher.LOGGER.log(
                     Level.WARNING,
