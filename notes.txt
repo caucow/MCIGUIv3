@@ -1,3 +1,13 @@
+new version format:
+    versions.json
+        current version
+        version map
+            id
+            url
+            size
+            date
+    
+
 add password manager
 release beta version 2
 add backup manager
