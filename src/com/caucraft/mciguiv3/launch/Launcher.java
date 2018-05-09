@@ -356,7 +356,8 @@ public final class Launcher {
                     LOGGER.log(Level.INFO, "Checking for updates");
                     LauncherVersions vers = LauncherVersions.getLauncherVersions(Launcher.this);
                     aboutWindow.setUpdateSuccess(vers);
-                    if (!LAUNCHER_VERSION.equals(vers.getCurrentVersion())) {
+                    String cVer = vers.getCurrentVersion();
+                    if (!cVer.equals(LAUNCHER_VERSION)) {
                         LOGGER.log(Level.INFO, "Update found: {0}", vers.getCurrentVersion());
                         launcherPanel.getControlPanel().setUpdateAvailable();
                     } else {
