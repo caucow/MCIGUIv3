@@ -29,7 +29,7 @@ public class Profile implements Comparable<Profile> {
         this.allowedReleaseTypes = new HashSet<>(4);
     }
     
-    public Profile(JsonConfig json) {
+    public Profile(String name, JsonConfig json) {
         this.json = json;
         this.name = json.getString("name", null);
         String gameDir = json.getString("gameDir", null);
@@ -37,6 +37,13 @@ public class Profile implements Comparable<Profile> {
             this.gameDir = new File(gameDir);
         }
         this.lastVersionId = json.getString("lastVersionId", null);
+        if (this.name == null) {
+            if (this.lastVersionId == null) {
+                this.name = name.substring(0, Math.min(8, name.length()));
+            } else {
+                this.name = this.lastVersionId + " " + name.substring(0, Math.min(8, name.length()));
+            }
+        }
         String javaDir = json.getString("javaDir", null);
         if (javaDir != null) {
             this.javaDir = new File(javaDir);

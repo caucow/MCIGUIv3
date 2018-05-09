@@ -23,7 +23,7 @@ public class ProfileManager {
         if (json != null) {
             json.getKeys("").forEach((s) -> {
                 try {
-                    Profile p = new Profile(json.getSubConfig("[\"" + s + "\"]"));
+                    Profile p = new Profile(s, json.getSubConfig("[\"" + s + "\"]"));
                     profiles.put(s, p);
                 } catch (Exception e) {
                     e.printStackTrace();
