@@ -68,7 +68,7 @@ public final class Launcher {
     public static final File LAUNCHER_JARFILE = getJarFile();
     public static final String LAUNCHER_VERSION = "3.0.3";
     public static final Logger LOGGER;
-    public static final String UPDATE_URL = "https://github.com/caucow/MCIGUIv3/raw/master/versions/version_manifest.JSON";
+    public static final String UPDATE_URL = "https://github.com/caucow/MCIGUIv3/raw/master/version_manifest.JSON";
     public static final int VERSION = 21;
     public static final GridBagConstraints FILL_CONSTRAINTS;
     public static final File CD;
