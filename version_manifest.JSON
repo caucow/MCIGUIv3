@@ -1,0 +1,86 @@
+{
+	"currentVersion": "3.0.3",
+    "upcoming": [
+        "Upcoming:",
+        "\t3.1.0:",
+        "\t\t+ Password manager from MCIGUIv2",
+        "\t3.?.?",
+        "\t\t+ World backup manager"
+    ],
+    "versions": {
+        "3.0.3": {
+            "url": "https://github.com/caucow/MCIGUIv3/releases/download/3.0.3/MCIGUIv3.jar",
+            "size": 5896375,
+            "date": "2018-05-09T18:10:00-05:00",
+            "changelog": {
+                "changed": [
+                    "Version management migrated entirely to GitHub.",
+                    "* Dropbox versions will remain but no longer be updated.",
+                    "Fixed unnamed profiles (created by windows launcher) breaking on load.",
+                    "Launcher window now shows full version in the title."
+                ]
+            }
+        },
+        "3.0.2": {
+            "url": "https://github.com/caucow/MCIGUIv3/releases/download/3.0.2/MCIGUIv3.jar",
+            "size": 5895926,
+            "date": "2018-05-06T01:15:00-05:00",
+            "changelog": {
+                "added": [
+                    "Even MORE error logging, because things were borking but I couldn't hear them."
+                ],
+                "changed": [
+                    "Fixed compatibility with either Mojang's launcher or MCIGUIv2's user profile saving.",
+                    "Fixed user login info not being displayed correctly",
+                    "Fixed inheritsFrom not being loaded from version.json (OptiFine and more will work now)"
+                ]
+            }
+        },
+        "3.0.1": {
+            "url": "https://github.com/caucow/MCIGUIv3/releases/download/3.0.1/MCIGUIv3.jar",
+            "size": 5893987,
+            "date": "2018-05-05T22:30:00-05:00",
+            "changelog": {
+                "added": [
+                    "Additional error logging so when everything's borked you'll know."
+                ],
+                "changed": [
+                    "Fixed compatibility with Mojang's java launcher's version.json files",
+                    "*Their java launcher saves version.jsons differently from their website. K",
+                    "Fixed Install versions button not working after logging in",
+                    "Fixed a few optional options from being unoptionally required."
+                ]
+            }
+        },
+        "3.0.0": {
+            "url": "https://github.com/caucow/MCIGUIv3/releases/download/3.0.0/MCIGUIv3.jar",
+            "size": 5889103,
+            "date": "2018-05-05T01:30:00-05:00",
+            "changelog": {
+                "added": [
+                    "Herobrine",
+                    "A new launcher... Initial release woo!",
+                    "Runs Minecraft!",
+                    "Probably does it better than Mojang!",
+                    "Can be run from a flash drive, if you have a copy of Java 8 or higher.",
+                    "Easy-access offline mode",
+                    "Supports official launcher's profiles JSON. Because compatibility right? Right Mojang!?!? RIGHT MOJANG?!!?!?!?!?",
+                    "Has a game output console for nerds.",
+                    "Logs game output in a way that won't corrupt if 2+ games are running",
+                    "Keeps past output consoles, just in case you actually cared about those for some weird reason",
+                    "Automagically refreshes a user's access token if necessary when logging in/starting the game."
+                ],
+                "changed": [
+                    "Changed nothing. This is the first release.lol just testing the changelogs don't mind me."
+                ],
+                "removed": [
+                    "A bunch of fluff that you don't need for running Minecraft."
+                ]
+            },
+            "installNotes": [
+                "This is the first release of MCIGUI version 3.",
+                "Future releases will have more features and compatibility with official Minecraft content."
+            ]
+        }
+    }
+}
