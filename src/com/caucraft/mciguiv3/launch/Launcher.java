@@ -66,7 +66,7 @@ import javax.swing.JPanel;
 public final class Launcher {
     
     public static final File LAUNCHER_JARFILE = getJarFile();
-    public static final String LAUNCHER_VERSION = "3.0.2";
+    public static final String LAUNCHER_VERSION = "3.0.3";
     public static final Logger LOGGER;
     public static final String UPDATE_URL = "https://github.com/caucow/MCIGUIv3/raw/master/versions/version_manifest.JSON";
     public static final int VERSION = 21;
@@ -253,7 +253,7 @@ public final class Launcher {
     private AboutWindow aboutWindow;
     
     public Launcher() {
-        this.mainWindow = new JFrame("MCIGUIv3");
+        this.mainWindow = new JFrame("MCIGUI " + LAUNCHER_VERSION);
         this.mainWindow.setSize(800, 600);
         this.mainWindow.setMinimumSize(new Dimension(620, 460));
         this.mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
