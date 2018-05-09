@@ -8,16 +8,19 @@
         "\t\t+ World backup manager"
     ],
     "versions": {
-        "3.0.3": {
-            "url": "https://github.com/caucow/MCIGUIv3/releases/download/3.0.3/MCIGUIv3.jar",
+        "3.0.4": {
+            "url": "https://github.com/caucow/MCIGUIv3/releases/download/3.0.4/MCIGUIv3.jar",
             "size": 5896375,
             "date": "2018-05-09T18:10:00-05:00",
             "changelog": {
                 "changed": [
+                    "Includes changes from 3.0.3 and 3.0.4."
                     "Version management migrated entirely to GitHub.",
                     "* Dropbox versions will remain but no longer be updated.",
                     "Fixed unnamed profiles (created by windows launcher) breaking on load.",
-                    "Launcher window now shows full version in the title."
+                    "Launcher window now shows full version in the title.",
+                    "Location of launcher version manifest on GitHub fixed.",
+                    "A null version will not say there is an update available (if update check fails)."
                 ]
             }
         },
