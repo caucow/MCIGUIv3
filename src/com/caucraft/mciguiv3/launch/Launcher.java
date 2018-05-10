@@ -349,25 +349,33 @@ public final class Launcher {
         });
         mainWindow.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         
-        Thread updateThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    LOGGER.log(Level.INFO, "Checking for updates");
-                    LauncherVersions vers = LauncherVersions.getLauncherVersions(Launcher.this);
-                    aboutWindow.setUpdateSuccess(vers);
-                    String cVer = vers.getCurrentVersion();
-                    if (!cVer.equals(LAUNCHER_VERSION)) {
-                        LOGGER.log(Level.INFO, "Update found: {0}", vers.getCurrentVersion());
-                        launcherPanel.getControlPanel().setUpdateAvailable();
-                    } else {
-                        LOGGER.log(Level.INFO, "MCIGUI is up to date.");
-                    }
-                } catch (Exception e) {
-                    LOGGER.log(Level.INFO, "Unable to check for updates", e);
-                    aboutWindow.setUpdateFail(e);
-                }
+        startUpdateThread(0);
+    }
+    
+    private void startUpdateThread(long sleepTime) {
+        Thread updateThread = new Thread(() -> {
+            try {
+                Thread.sleep(sleepTime);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                return;
             }
+            try {
+                LOGGER.log(Level.INFO, "Checking for updates");
+                LauncherVersions vers = LauncherVersions.getLauncherVersions(Launcher.this);
+                aboutWindow.setUpdateSuccess(vers);
+                String cVer = vers.getCurrentVersion();
+                if (!cVer.equals(LAUNCHER_VERSION)) {
+                    LOGGER.log(Level.INFO, "Update found: {0}", vers.getCurrentVersion());
+                    launcherPanel.getControlPanel().setUpdateAvailable();
+                } else {
+                    LOGGER.log(Level.INFO, "MCIGUI is up to date.");
+                }
+            } catch (Exception e) {
+                LOGGER.log(Level.INFO, "Unable to check for updates", e);
+                aboutWindow.setUpdateFail(e);
+            }
+            startUpdateThread(86400000);
         },"MCIGUI Update Checker");
         updateThread.setDaemon(true);
         updateThread.start();
