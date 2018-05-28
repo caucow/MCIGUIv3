@@ -1,7 +1,5 @@
 package com.caucraft.mciguiv3.gamefiles.util;
 
-import com.caucraft.mciguiv3.gamefiles.util.Rule;
-import com.caucraft.mciguiv3.gamefiles.util.Download;
 import com.caucraft.mciguiv3.json.JsonConfig;
 import com.caucraft.mciguiv3.launch.Launcher;
 import com.google.gson.JsonArray;
@@ -14,6 +12,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 
 /**
  *
@@ -47,6 +46,9 @@ public abstract class Library {
     public boolean validateFiles(ValidGameFileSet validFiles, File mcHome, String os, String osArch) {
         File libFile = getLibraryFile(mcHome, os, osArch);
         Download dl = getDownload(os);
+        if (dl == null) {
+            return true;
+        }
         return dl.validateFile(validFiles, libFile);
     }
     
@@ -97,6 +99,20 @@ public abstract class Library {
                         cJson.getLong("size", 0),
                         cJson.getString("sha1", null),
                         cJson.getString("url", null)));
+            }
+        }
+        if (download == null && classifiers == null) {
+            String tmpurl = json.getString("url", null);
+            String[] path = name.split(":");
+            if (path.length != 3) {
+                Launcher.LOGGER.log(Level.WARNING, "Non-standard library name: {0}", name);
+            } else {
+                String subpath = path[0].replace('.', '/') + '/' + path[1] + '/' + path[2] + '/' + path[1] + '-' + path[2] + ".jar";
+                if (tmpurl == null) {
+                    download = new Download(0, null, "https://libraries.minecraft.net/" + subpath);
+                } else {
+                    download = new Download(0, null, tmpurl + subpath);
+                }
             }
         }
         Library lib;
@@ -174,7 +190,7 @@ public abstract class Library {
             }
             Download dl = getDownload(os);
             File libFile = getLibraryFile(mcHome, os, osArch);
-            return dl.validateFile(validFiles, libFile);
+            return (dl != null && dl.validateFile(validFiles, libFile)) || (dl == null && libFile.exists());
         }
         
         @Override

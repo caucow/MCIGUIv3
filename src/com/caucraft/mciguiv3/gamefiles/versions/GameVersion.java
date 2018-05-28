@@ -143,16 +143,21 @@ public class GameVersion implements Comparable<GameVersion> {
         JsonConfig json = new JsonConfig();
         json.load(jsonFile);
         GameVersion ver = new GameVersion();
-        ver.assets = new AssetIndexInfo(
-                json.getString("assetIndex.id", null),
-                json.getString("assetIndex.sha1", null),
-                json.getLong("assetIndex.size", 0),
-                json.getString("assetIndex.url", null),
-                json.getLong("assetIndex.totalSize", 0));
+        ver.inheritsFrom = json.getString("inheritsFrom", null);
+        JsonConfig sub = json.getSubConfig("assetIndex");
+        if (sub != null) {
+            ver.assets = new AssetIndexInfo(
+                    json.getString("assetIndex.id", null),
+                    json.getString("assetIndex.sha1", null),
+                    json.getLong("assetIndex.size", 0),
+                    json.getString("assetIndex.url", null),
+                    json.getLong("assetIndex.totalSize", 0));
+        } else if (ver.inheritsFrom != null) {
+            ver.assets = getGameVersion(mcHome, ver.inheritsFrom).getAssets();
+        }
         ver.id = Objects.requireNonNull(json.getString("id", null));
         ver.mainClass = Objects.requireNonNull(json.getString("mainClass", null));
         ver.minimumLauncherVersion = json.getInt("minimumLauncherVersion", 21);
-        ver.inheritsFrom = json.getString("inheritsFrom", null);
         if (ver.minimumLauncherVersion > Launcher.VERSION) {
             Launcher.LOGGER.log(
                     Level.WARNING,
@@ -174,10 +179,15 @@ public class GameVersion implements Comparable<GameVersion> {
             ver.time = Date.from(Instant.ofEpochMilli(jsonFile.lastModified()));
         }
         ver.type = json.getString("type", null);
-        JsonConfig sub = json.getSubConfig("downloads.client");
+        sub = json.getSubConfig("downloads.client");
         if (sub != null) {
             ver.clientDownload = new Download(
                     sub.getLong("size", 0), sub.getString("sha1", null), sub.getString("url", null));
+        } else {
+            String jar = json.getString("jar", null);
+            if (jar != null) {
+                ver.clientDownload = getGameVersion(mcHome, jar).getClientDownload();
+            }
         }
         sub = json.getSubConfig("downloads.server");
         if (sub != null) {
@@ -196,6 +206,7 @@ public class GameVersion implements Comparable<GameVersion> {
                 }
             }
         }
+        // <editor-fold desc="Argument Parser">
         String args = json.getString("minecraftArguments", null);
         if (args != null) {
             ArgumentParser argParser = ver.args = new ArgumentParser(ver.mainClass);
@@ -356,6 +367,7 @@ public class GameVersion implements Comparable<GameVersion> {
                 }
             }
         }
+        // </editor-fold>
         return ver;
     }
     
