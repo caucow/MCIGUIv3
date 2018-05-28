@@ -4,7 +4,7 @@ import com.caucraft.mciguiv3.components.GoodComboBoxRenderer;
 import com.caucraft.mciguiv3.components.RandomTexturedPanel;
 import com.caucraft.mciguiv3.gamefiles.profiles.AuthenticatedUser;
 import com.caucraft.mciguiv3.launch.Launcher;
-import com.caucraft.mciguiv3.pstor.PasswordDialog;
+import com.caucraft.mciguiv3.pmgr.PasswordDialog;
 import com.caucraft.mciguiv3.util.ImageResources;
 import com.caucraft.mciguiv3.util.Task;
 import com.caucraft.mciguiv3.util.TaskList;

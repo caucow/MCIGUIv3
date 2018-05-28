@@ -1,5 +1,5 @@
 
-import com.caucraft.mciguiv3.pstor.PasswordDialog;
+import com.caucraft.mciguiv3.pmgr.PasswordDialog;
 
 
 
