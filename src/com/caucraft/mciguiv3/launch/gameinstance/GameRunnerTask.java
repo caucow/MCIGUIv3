@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.jar.JarFile;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -32,6 +33,7 @@ import javax.swing.JOptionPane;
  */
 public class GameRunnerTask extends TaskList {
     
+    private Launcher launcher;
     private GameVersion version;
     private List<Library.CodeLibrary> libs;
     private List<Library.NativeLibrary> nats;
@@ -53,6 +55,8 @@ public class GameRunnerTask extends TaskList {
             boolean canDownloadFiles,
             String extraJvmArgs) {
         super("Starting game (" + versionId + ")");
+        
+        this.launcher = launcher;
         
         this.addTask(new Task("Preparing launcher") {
             @Override
@@ -102,7 +106,7 @@ public class GameRunnerTask extends TaskList {
         } else {
             TaskList extractTask = new TaskList("Extracting natives", true);
             if (canDownloadFiles) {
-                this.addTask(new GameFileDownloaderTask(validFiles, mcHome, versionId, errorDialogs));
+                this.addTask(new GameFileDownloaderTask(validFiles, mcHome, versionId, logger));
             }
             this.addTask(new Task("Loading version information") {
                 @Override
@@ -130,7 +134,11 @@ public class GameRunnerTask extends TaskList {
                         addPassingNatives(nextVer.getNatives(), properties);
                     }
                     for (Library.NativeLibrary nativeLib : nats) {
-                        JarFile jar = new JarFile(nativeLib.getLibraryFile(mcHome, Launcher.OS_NAME.osName, Launcher.OS_ARCH));
+                        File jfile = nativeLib.getLibraryFile(mcHome, Launcher.OS_NAME.osName, Launcher.OS_ARCH);
+                        if (!jfile.exists()) {
+                            continue;
+                        }
+                        JarFile jar = new JarFile(jfile);
                         extractTask.addTask(Util.getJarExtractTask("Extracting " + nativeLib.getName(), nativeDir, jar, nativeLib.getExcluded()));
                     }
                 }
@@ -183,5 +191,38 @@ public class GameRunnerTask extends TaskList {
             JOptionPane.showMessageDialog(null, message);
         }
         Launcher.getLogger().log(Level.WARNING, message, t);
+    }
+    
+    public Task getCancelTask() {
+        return new Task("Verifying game launch") {
+            @Override
+            public float getProgress() {
+                return -1.0F;
+            }
+            
+            @Override
+            public void run() throws Exception {
+                if (GameRunnerTask.this.getState() == State.FAIL) {
+                    launcher.getSecondaryTaskMgr().addTask(new Task("Removing game log panel") {
+                        @Override
+                        public float getProgress() {
+                            return -1.0F;
+                        }
+
+                        @Override
+                        public void run() throws Exception {
+                            try {
+                                for (Handler h : logger.getHandlers()) {
+                                    h.close();
+                                }
+                                launcher.getPastRunsPanel().addRun(launchInfo, logPanel.getLogTextArea().getDocument());
+                            } catch (Exception e) {
+                                Launcher.LOGGER.log(Level.WARNING, "Unable to remove cancelled game launch panel.", e);
+                            }
+                        }
+                    });
+                }
+            }
+        };
     }
 }
