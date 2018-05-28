@@ -107,7 +107,7 @@ public class GameMonitor extends Thread {
                     try {
                         launcher.getPastRunsPanel().addRun(launchInfo, logPanel.getLogTextArea().getDocument());
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        Launcher.LOGGER.log(Level.WARNING, "Unable to remove stopped game launch panel.", e);
                     }
                 }
             });
