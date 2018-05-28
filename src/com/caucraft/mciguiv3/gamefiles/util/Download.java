@@ -39,7 +39,7 @@ public class Download {
         if (validFiles != null && validFiles.isValid(file)) {
             return true;
         }
-        boolean valid = file.exists() && file.length() == size && hash != null && hash.equalsIgnoreCase(Launcher.getFileSha1(file));
+        boolean valid = file.exists() && (size == 0 && file.length() > 0 || size != 0 && file.length() == size) && (hash == null || hash.equalsIgnoreCase(Launcher.getFileSha1(file)));
         if (valid) {
             validFiles.setValid(file);
         }
