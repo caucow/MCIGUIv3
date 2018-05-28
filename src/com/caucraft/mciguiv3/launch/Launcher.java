@@ -17,7 +17,7 @@ import com.caucraft.mciguiv3.launch.gameinstance.GameFileDownloaderTask;
 import com.caucraft.mciguiv3.launch.gameinstance.GameMonitor;
 import com.caucraft.mciguiv3.launch.gameinstance.GameRunnerTask;
 import com.caucraft.mciguiv3.launch.gameinstance.PastRunsPanel;
-import com.caucraft.mciguiv3.pstor.PasswordDialog;
+import com.caucraft.mciguiv3.pmgr.PasswordDialog;
 import com.caucraft.mciguiv3.update.AboutWindow;
 import com.caucraft.mciguiv3.update.LauncherVersions;
 import com.caucraft.mciguiv3.util.Task;
@@ -636,6 +636,7 @@ public final class Launcher {
                             p.getJavaArgs()
                     );
                     mainTaskMgr.addTask(runner);
+                    mainTaskMgr.addTask(runner.getCancelTask());
                 }
             };
             mainTaskMgr.addTask(prepTask);
@@ -785,6 +786,7 @@ public final class Launcher {
                             p.getJavaArgs()
                     );
                     mainTaskMgr.addTask(runner);
+                    mainTaskMgr.addTask(runner.getCancelTask());
                 }
             };
             Task startTask = new Task("Starting game") {
@@ -997,7 +999,7 @@ public final class Launcher {
                 } else {
                     TaskList downloadTask = new TaskList("Downloading required game files");
                     downloadFiles.forEach((ver) -> {
-                        downloadTask.addTask(new GameFileDownloaderTask(validFiles, mcHome, ver.getId(), false));
+                        downloadTask.addTask(new GameFileDownloaderTask(validFiles, mcHome, ver.getId(), LOGGER));
                     });
                     downloadTask.addTask(new Task("Reloading version list") {
                         @Override
