@@ -281,6 +281,7 @@ public class MainPanel extends RandomTexturedPanel {
         profileScrollPane.getViewport().setOpaque(false);
         profileScrollPane.getHorizontalScrollBar().setOpaque(false);
         profileScrollPane.getVerticalScrollBar().setOpaque(false);
+        profileScrollPane.getVerticalScrollBar().setUnitIncrement(8);
         versionSeparator.setForeground(Color.WHITE);
         versionSeparator.setOpaque(false);
         versionContainerPanel.setOpaque(false);
@@ -289,6 +290,7 @@ public class MainPanel extends RandomTexturedPanel {
         versionScrollPane.getViewport().setOpaque(false);
         versionScrollPane.getHorizontalScrollBar().setOpaque(false);
         versionScrollPane.getVerticalScrollBar().setOpaque(false);
+        versionScrollPane.getVerticalScrollBar().setUnitIncrement(8);
         globalSettingsPanel.setOpaque(false);
         mcHomeLabel.setForeground(Color.WHITE);
         mcHomeTextField.setOpaque(false);
@@ -333,12 +335,12 @@ public class MainPanel extends RandomTexturedPanel {
         
         disableAll();
         
-        MigLayout mainLayout = new MigLayout("fill");
+        MigLayout mainLayout = new MigLayout("fill, nogrid, nocache");
         this.setLayout(mainLayout);
         this.setMinimumSize(new Dimension(600, 300));
         this.add(this.globalSettingsPanel, "north");
-        this.add(this.profileScrollPane, "west, shrinkx, growy");
-        this.add(this.versionContainerPanel, "east, shrinkx, growy");
+        this.add(this.profileScrollPane, "west, growy, w pref!");
+        this.add(this.versionContainerPanel, "east, growy, w pref!");
         this.add(this.profileSettingsPanel, "center, grow");
         
         this.registerListeners();
@@ -398,10 +400,10 @@ public class MainPanel extends RandomTexturedPanel {
             profRb.addActionListener(getProfileListener());
         }
         
+        loadProfile();
+        
         this.revalidate();
         this.repaint();
-        
-        loadProfile();
         
         mcHomeTextField.setEnabled(true);
         mcHomeReloadButton.setEnabled(true);

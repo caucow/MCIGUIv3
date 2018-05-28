@@ -67,6 +67,7 @@ public class ManifestViewerDialog extends JDialog {
         this.mainScrollPane.getViewport().setOpaque(false);
         this.mainScrollPane.getHorizontalScrollBar().setOpaque(false);
         this.mainScrollPane.getVerticalScrollBar().setOpaque(false);
+        this.mainScrollPane.getVerticalScrollBar().setUnitIncrement(8);
         this.snapsCheckbox.setOpaque(false);
         this.snapsCheckbox.setForeground(Color.WHITE);
         this.betaCheckbox.setOpaque(false);
