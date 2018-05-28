@@ -1,16 +1,13 @@
-new version format:
-    versions.json
-        current version
-        version map
-            id
-            url
-            size
-            date
-    
+Apache 2.0 - GSON, Commons Compress
+Public Domain - XZ
+MIT - BouncyCastle
+GPL - MigLayout
+
+mojang libs didn't have urls before
 
 add password manager
 release beta version 2
 add backup manager
 release beta version 3
 
-credit for line wrapping in JTextPane: http://java-sl.com/wrap.html
+credit for line wrapping in JTextPane (not used doesn't work :s): http://java-sl.com/wrap.html
