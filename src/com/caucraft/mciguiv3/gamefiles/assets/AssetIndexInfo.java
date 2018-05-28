@@ -10,6 +10,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 /**
  *
@@ -17,17 +18,17 @@ import java.nio.file.Paths;
  */
 public class AssetIndexInfo {
     
-    private String id;
-    private String sha_1;
-    private long size;
-    private String url;
-    private long totalSize;
+    private final String id;
+    private final String sha_1;
+    private final long size;
+    private final String url;
+    private final long totalSize;
     
     public AssetIndexInfo(String id, String sha_1, long size, String url, long totalSize) {
-        this.id = id;
-        this.sha_1 = sha_1;
+        this.id = Objects.requireNonNull(id);
+        this.sha_1 = Objects.requireNonNull(sha_1);
         this.size = size;
-        this.url = url;
+        this.url = Objects.requireNonNull(url);
         this.totalSize = totalSize;
     }
     

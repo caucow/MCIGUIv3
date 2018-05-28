@@ -18,6 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
 /**
@@ -26,8 +27,9 @@ import javax.swing.JOptionPane;
  */
 public class GameFileDownloaderTask extends TaskList {
     
-    public GameFileDownloaderTask(ValidGameFileSet validFiles, File mcHome, String versionId, boolean errorDialogs) {
+    public GameFileDownloaderTask(ValidGameFileSet validFiles, File mcHome, String versionId, Logger errorLogger) {
         super("Checking files for " + versionId);
+        Logger logger = errorLogger == null ? Launcher.LOGGER : errorLogger;
         
         Set<String> assetIds = new HashSet<>();
         List<Asset> assets = new ArrayList<>();
@@ -56,23 +58,25 @@ public class GameFileDownloaderTask extends TaskList {
                     GameVersion parent = version;
                     
                     AssetIndexInfo indexInfo = version.getAssets();
-                    if (!indexInfo.validateFiles(validFiles, mcHome)) {
+                    AssetIndex index;
+                    if (indexInfo != null) {
+                        if (!indexInfo.validateFiles(validFiles, mcHome)) {
+                            try {
+                                indexInfo.installAssetIndex(mcHome);
+                            } catch (IOException e) {
+                                logger.log(Level.WARNING, "Could not download asset index for " + curVerName, e);
+                                throw e;
+                            }
+                        }
                         try {
-                            indexInfo.installAssetIndex(mcHome);
-                        } catch (IOException e) {
-                            doError("Could not download asset index for " + curVerName, e, errorDialogs);
+                            index = indexInfo.loadAssetIndex(mcHome);
+                        } catch (Exception e) {
+                            logger.log(Level.WARNING, "Could not load asset index for " + curVerName, e);
                             throw e;
                         }
+                        assets.addAll(index.getAssets());
+                        assetIds.add(indexInfo.getId());
                     }
-                    AssetIndex index;
-                    try {
-                        index = indexInfo.loadAssetIndex(mcHome);
-                    } catch (Exception e) {
-                        doError("Could not load asset index for " + curVerName, e, errorDialogs);
-                        throw e;
-                    }
-                    assets.addAll(index.getAssets());
-                    assetIds.add(indexInfo.getId());
                     libs.addAll(parent.getLibraries());
                     libs.addAll(parent.getNatives());
                     checkedVersions.add(parent.getId());
@@ -80,19 +84,19 @@ public class GameFileDownloaderTask extends TaskList {
                     while ((curVerName = parent.getInheritsFrom()) != null && !checkedVersions.contains(curVerName)) {
                         parent = GameVersion.getGameVersion(mcHome, curVerName);
                         indexInfo = version.getAssets();
-                        if (!assetIds.contains(indexInfo.getId())) {
+                        if (indexInfo != null && !assetIds.contains(indexInfo.getId())) {
                             if (!indexInfo.validateFiles(validFiles, mcHome)) {
                                 try {
                                     indexInfo.installAssetIndex(mcHome);
                                 } catch (IOException e) {
-                                    doError("Could not download asset index for " + curVerName, e, errorDialogs);
+                                    logger.log(Level.WARNING, "Could not download asset index for " + curVerName, e);
                                     throw e;
                                 }
                             }
                             try {
                                 index = indexInfo.loadAssetIndex(mcHome);
                             } catch (Exception e) {
-                                doError("Could not load asset index for " + curVerName, e, errorDialogs);
+                                logger.log(Level.WARNING, "Could not load asset index for " + curVerName, e);
                                 throw e;
                             }
                             assets.addAll(index.getAssets());
@@ -103,7 +107,7 @@ public class GameFileDownloaderTask extends TaskList {
                         checkedVersions.add(parent.getId());
                     }
                 } catch (Exception e) {
-                    doError("Could not open version JSON for " + curVerName + ". Try reinstalling it.", e, true);
+                    logger.log(Level.WARNING, "Could not open version JSON for " + curVerName + ". Try reinstalling it.", e);
                     throw e;
                 }
             }
@@ -146,10 +150,14 @@ public class GameFileDownloaderTask extends TaskList {
                 for (Library lib : libs) {
                     if (!lib.validateFiles(validFiles, mcHome, Launcher.OS_NAME.osName, Launcher.OS_ARCH)) {
                         Download dl = lib.getDownload(Launcher.OS_NAME.osName);
-                        missingLibs.addTask(Util.getFileDownloadTask(
-                                "Downloading " + lib.getName(),
-                                lib.getLibraryFile(mcHome, Launcher.OS_NAME.osName, Launcher.OS_ARCH),
-                                dl.getUrl(), dl.getSize()));
+                        if (dl == null) {
+                            logger.log(Level.WARNING, "Library {0} is missing and can not be downloaded.", lib.getName());
+                        } else {
+                            missingLibs.addTask(Util.getFileDownloadTask(
+                                    "Downloading " + lib.getName(),
+                                    lib.getLibraryFile(mcHome, Launcher.OS_NAME.osName, Launcher.OS_ARCH),
+                                    dl.getUrl(), dl.getSize()));
+                        }
                     }
                     cur++;
                     updateProgress();
@@ -159,12 +167,5 @@ public class GameFileDownloaderTask extends TaskList {
         this.addTask(missingGame);
         this.addTask(missingAssets);
         this.addTask(missingLibs);
-    }
-    
-    private void doError(String message, Throwable t, boolean dialog) {
-        if (dialog) {
-            JOptionPane.showMessageDialog(null, message);
-        }
-        Launcher.getLogger().log(Level.WARNING, message, t);
     }
 }
