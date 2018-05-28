@@ -66,7 +66,7 @@ import javax.swing.JPanel;
 public final class Launcher {
     
     public static final File LAUNCHER_JARFILE = getJarFile();
-    public static final String LAUNCHER_VERSION = "3.0.4";
+    public static final String LAUNCHER_VERSION = "3.0.5";
     public static final Logger LOGGER;
     public static final String UPDATE_URL = "https://github.com/caucow/MCIGUIv3/raw/master/version_manifest.JSON";
     public static final int VERSION = 21;
