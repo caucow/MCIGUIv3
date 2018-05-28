@@ -1,4 +1,4 @@
-package com.caucraft.mciguiv3.pstor;
+package com.caucraft.mciguiv3.pmgr;
 
 import java.awt.Window;
 import javax.swing.JDialog;

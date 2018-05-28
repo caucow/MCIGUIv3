@@ -1,4 +1,4 @@
-package com.caucraft.mciguiv3.pstor;
+package com.caucraft.mciguiv3.pmgr;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;

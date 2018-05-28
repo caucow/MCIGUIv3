@@ -1,6 +1,5 @@
-package com.caucraft.mciguiv3.pstor;
+package com.caucraft.mciguiv3.pmgr;
 
-import com.caucraft.mciguiv3.util.Function;
 import com.caucraft.mciguiv3.util.WaitProgressDialog;
 import com.google.gson.internal.LinkedTreeMap;
 import java.awt.Dialog;
