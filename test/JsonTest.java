@@ -1,5 +1,5 @@
 
-import com.caucraft.mciguiv3.json.JsonConfig;
+import com.caucraft.util.JsonConfig;
 import com.google.gson.JsonParser;
 import java.io.File;
 

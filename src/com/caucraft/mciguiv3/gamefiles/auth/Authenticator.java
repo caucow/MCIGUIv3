@@ -1,8 +1,8 @@
 package com.caucraft.mciguiv3.gamefiles.auth;
 
 import com.caucraft.mciguiv3.gamefiles.profiles.AuthenticatedUser;
-import com.caucraft.mciguiv3.http.HttpPayload;
-import com.caucraft.mciguiv3.json.JsonConfig;
+import com.caucraft.util.HttpPayload;
+import com.caucraft.util.JsonConfig;
 import com.caucraft.mciguiv3.util.Task;
 import com.caucraft.mciguiv3.util.TaskList;
 import com.google.gson.JsonParser;

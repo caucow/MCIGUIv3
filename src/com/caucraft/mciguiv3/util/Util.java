@@ -1,6 +1,6 @@
 package com.caucraft.mciguiv3.util;
 
-import com.caucraft.mciguiv3.http.HttpPayload;
+import com.caucraft.util.HttpPayload;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;

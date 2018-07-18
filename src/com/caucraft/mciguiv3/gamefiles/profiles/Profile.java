@@ -1,6 +1,6 @@
 package com.caucraft.mciguiv3.gamefiles.profiles;
 
-import com.caucraft.mciguiv3.json.JsonConfig;
+import com.caucraft.util.JsonConfig;
 import com.google.gson.JsonObject;
 import java.awt.Dimension;
 import java.io.File;

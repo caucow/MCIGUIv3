@@ -1,6 +1,6 @@
 package com.caucraft.mciguiv3.gamefiles.profiles;
 
-import com.caucraft.mciguiv3.json.JsonConfig;
+import com.caucraft.util.JsonConfig;
 import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;

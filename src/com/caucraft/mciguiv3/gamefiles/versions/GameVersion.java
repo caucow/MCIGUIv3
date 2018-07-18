@@ -6,7 +6,7 @@ import com.caucraft.mciguiv3.gamefiles.util.Rule;
 import com.caucraft.mciguiv3.gamefiles.util.Download;
 import com.caucraft.mciguiv3.gamefiles.util.Argument;
 import com.caucraft.mciguiv3.gamefiles.util.ArgumentParser;
-import com.caucraft.mciguiv3.json.JsonConfig;
+import com.caucraft.util.JsonConfig;
 import com.caucraft.mciguiv3.launch.Launcher;
 import com.caucraft.mciguiv3.util.Util;
 import com.google.gson.JsonArray;

@@ -1,7 +1,7 @@
 package com.caucraft.mciguiv3.update;
 
-import com.caucraft.mciguiv3.http.HttpPayload;
-import com.caucraft.mciguiv3.json.JsonConfig;
+import com.caucraft.util.HttpPayload;
+import com.caucraft.util.JsonConfig;
 import com.caucraft.mciguiv3.launch.Launcher;
 import java.io.IOException;
 import java.util.ArrayList;

@@ -1,6 +1,6 @@
 package com.caucraft.mciguiv3.gamefiles.util;
 
-import com.caucraft.mciguiv3.http.HttpPayload;
+import com.caucraft.util.HttpPayload;
 import com.caucraft.mciguiv3.launch.Launcher;
 import java.io.File;
 import java.io.IOException;

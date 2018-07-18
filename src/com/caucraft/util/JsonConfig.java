@@ -1,4 +1,4 @@
-package com.caucraft.mciguiv3.json;
+package com.caucraft.util;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;

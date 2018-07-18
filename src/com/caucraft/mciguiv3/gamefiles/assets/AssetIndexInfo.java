@@ -1,8 +1,8 @@
 package com.caucraft.mciguiv3.gamefiles.assets;
 
 import com.caucraft.mciguiv3.gamefiles.util.ValidGameFileSet;
-import com.caucraft.mciguiv3.http.HttpPayload;
-import com.caucraft.mciguiv3.json.JsonConfig;
+import com.caucraft.util.HttpPayload;
+import com.caucraft.util.JsonConfig;
 import com.caucraft.mciguiv3.launch.Launcher;
 import com.google.gson.JsonParseException;
 import java.io.File;

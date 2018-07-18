@@ -1,6 +1,6 @@
 package com.caucraft.mciguiv3.gamefiles.assets;
 
-import com.caucraft.mciguiv3.json.JsonConfig;
+import com.caucraft.util.JsonConfig;
 import com.google.gson.JsonParseException;
 import java.io.File;
 import java.io.FileNotFoundException;

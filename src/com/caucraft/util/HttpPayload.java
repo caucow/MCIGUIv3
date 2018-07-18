@@ -1,4 +1,4 @@
-package com.caucraft.mciguiv3.http;
+package com.caucraft.util;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;

@@ -1,7 +1,7 @@
 package com.caucraft.mciguiv3.gamefiles.versions.manifest;
 
-import com.caucraft.mciguiv3.http.HttpPayload;
-import com.caucraft.mciguiv3.json.JsonConfig;
+import com.caucraft.util.HttpPayload;
+import com.caucraft.util.JsonConfig;
 import com.google.gson.JsonArray;
 import java.io.IOException;
 import java.net.SocketTimeoutException;

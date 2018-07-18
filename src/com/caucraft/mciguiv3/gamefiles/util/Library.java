@@ -1,6 +1,6 @@
 package com.caucraft.mciguiv3.gamefiles.util;
 
-import com.caucraft.mciguiv3.json.JsonConfig;
+import com.caucraft.util.JsonConfig;
 import com.caucraft.mciguiv3.launch.Launcher;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
