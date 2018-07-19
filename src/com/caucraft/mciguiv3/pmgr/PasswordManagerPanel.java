@@ -1,13 +1,13 @@
-package com.caucraft.mciguiv3.launch;
+package com.caucraft.mciguiv3.pmgr;
 
 import com.caucraft.mciguiv3.components.RandomTexturedPanel;
+import com.caucraft.mciguiv3.launch.Launcher;
 import com.caucraft.mciguiv3.pmgr.PasswordManager;
 import com.caucraft.mciguiv3.util.ImageResources;
 import java.awt.Color;
 import java.awt.Image;
 import java.io.IOException;
 import java.util.Set;
-import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -56,7 +56,7 @@ public class PasswordManagerPanel extends RandomTexturedPanel {
         
         this.editButton = new JButton("Edit");
         this.decryptButton = new JButton("Decrypt");
-        this.refreshButton = new JButton("Refresh/Forget Master");
+        this.refreshButton = new JButton("Forget Master/Refresh");
         this.showUsersCheckbox = new JCheckBox("Show Usernames");
         this.changeMasterButton = new JButton("Change Master Password");
         
@@ -110,8 +110,6 @@ public class PasswordManagerPanel extends RandomTexturedPanel {
         passListViewPanel.removeAll();
         editButton.setEnabled(false);
         decryptButton.setEnabled(false);
-        showUsersCheckbox.setEnabled(false);
-        showUsersCheckbox.setSelected(false);
         changeMasterButton.setEnabled(false);
         refreshButton.setEnabled(true);
         PasswordManager passMgr = launcher.getPasswordManager();

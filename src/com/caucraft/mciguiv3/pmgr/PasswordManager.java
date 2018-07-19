@@ -61,7 +61,7 @@ public class PasswordManager {
     }
     
     public boolean isDecrypted() {
-        return isPasswordSet() && loginMap != null;
+        return !requirePassword && isPasswordSet() && loginMap != null;
     }
     
     public void load() throws IOException {
@@ -424,6 +424,9 @@ public class PasswordManager {
     }
     
     public void forgetPassword() {
+        if (requirePassword) {
+            resetState();
+        }
         requirePassword = true;
     }
     
