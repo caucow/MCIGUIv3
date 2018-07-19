@@ -1,5 +1,6 @@
 package com.caucraft.mciguiv3.launch;
 
+import com.caucraft.mciguiv3.pmgr.PasswordManagerPanel;
 import com.caucraft.mciguiv3.gamefiles.auth.AuthPanel;
 import com.caucraft.mciguiv3.gamefiles.auth.Authenticator;
 import com.caucraft.mciguiv3.gamefiles.auth.ForbiddenOperationException;
@@ -67,7 +68,7 @@ import javax.swing.JPanel;
 public final class Launcher {
     
     public static final File LAUNCHER_JARFILE = getJarFile();
-    public static final String LAUNCHER_VERSION = "3.1.0";
+    public static final String LAUNCHER_VERSION = "3.1.1";
     public static final Logger LOGGER;
     public static final String UPDATE_URL = "https://github.com/caucow/MCIGUIv3/raw/master/version_manifest.JSON";
     public static final int MOJANG_LAUNCHER_VERSION = 21;
