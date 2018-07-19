@@ -18,6 +18,7 @@ import com.caucraft.mciguiv3.launch.gameinstance.GameMonitor;
 import com.caucraft.mciguiv3.launch.gameinstance.GameRunnerTask;
 import com.caucraft.mciguiv3.launch.gameinstance.PastRunsPanel;
 import com.caucraft.mciguiv3.pmgr.PasswordDialog;
+import com.caucraft.mciguiv3.pmgr.PasswordManager;
 import com.caucraft.mciguiv3.update.AboutWindow;
 import com.caucraft.mciguiv3.update.LauncherVersions;
 import com.caucraft.mciguiv3.util.Task;
@@ -66,10 +67,10 @@ import javax.swing.JPanel;
 public final class Launcher {
     
     public static final File LAUNCHER_JARFILE = getJarFile();
-    public static final String LAUNCHER_VERSION = "3.0.5";
+    public static final String LAUNCHER_VERSION = "3.1.0";
     public static final Logger LOGGER;
     public static final String UPDATE_URL = "https://github.com/caucow/MCIGUIv3/raw/master/version_manifest.JSON";
-    public static final int VERSION = 21;
+    public static final int MOJANG_LAUNCHER_VERSION = 21;
     public static final GridBagConstraints FILL_CONSTRAINTS;
     public static final File CD;
     public static final Path CD_PATH;
@@ -242,10 +243,13 @@ public final class Launcher {
     private LauncherProfiles profiles;
     private VersionManager versions;
     private ValidGameFileSet validFiles;
+    private PasswordManager passMgr;
+    private File passFile;
     
     private LauncherPanel launcherPanel;
     private MainPanel mainPanel;
     private BackupPanel backupPanel;
+    private PasswordManagerPanel passMgrPanel;
     private PastRunsPanel pastRunsPanel;
     
     private boolean hasLoggedInOnce;
@@ -307,17 +311,20 @@ public final class Launcher {
         }
         versions = new VersionManager(mcHome);
         versions.load();
+        passMgr = new PasswordManager(this, new File(mcHome, "ccraft/accounts.ecca"));
         validFiles = new ValidGameFileSet();
         LOGGER.info("Building GUI.");
         
         launcherPanel = new LauncherPanel(this);
         mainPanel = new MainPanel(this);
         backupPanel = new BackupPanel();
+        passMgrPanel = new PasswordManagerPanel(this);
         pastRunsPanel = new PastRunsPanel(this);
         
         launcherPanel.addTab("Launcher Log", logPanel);
         int mainIndex = launcherPanel.addTab("Settings", mainPanel);
 //        launcherPanel.addTab("Backup", backupPanel);
+        launcherPanel.addTab("Password Manager", passMgrPanel);
         launcherPanel.addTab("Past Runs", pastRunsPanel);
         launcherPanel.setSelectedTab(mainIndex);
         
@@ -328,6 +335,7 @@ public final class Launcher {
         setCurrentScreen(launcherPanel);
         mainPanel.loadProfiles();
         reloadAuthDisplay(true);
+        reloadPassManager();
         mainWindow.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -472,6 +480,10 @@ public final class Launcher {
         return backupPanel;
     }
     
+    public PasswordManagerPanel getPasswordManagerPanel() {
+        return passMgrPanel;
+    }
+    
     public PastRunsPanel getPastRunsPanel() {
         return pastRunsPanel;
     }
@@ -498,6 +510,10 @@ public final class Launcher {
     
     public VersionManager getVersionManager() {
         return versions;
+    }
+    
+    public PasswordManager getPasswordManager() {
+        return passMgr;
     }
     
     public File getMcHome() {
@@ -534,6 +550,8 @@ public final class Launcher {
         versions.load();
         mainPanel.loadProfiles();
         validFiles = new ValidGameFileSet();
+        passMgr = new PasswordManager(this, new File(getMcHome(), "ccraft/accounts.ecca"));
+        reloadPassManager();
     }
     
     public void reloadProfiles() {
@@ -552,6 +570,11 @@ public final class Launcher {
     
     public void reloadAuthDisplay(boolean setUser) {
         launcherPanel.getControlPanel().reloadAuthDisplay(setUser);
+    }
+    
+    public void reloadPassManager() {
+        passMgr.forgetPassword();
+        passMgrPanel.reloadManagerView();
     }
     
     public void selectAccount() {

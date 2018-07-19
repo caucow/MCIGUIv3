@@ -158,12 +158,12 @@ public class GameVersion implements Comparable<GameVersion> {
         ver.id = Objects.requireNonNull(json.getString("id", null));
         ver.mainClass = Objects.requireNonNull(json.getString("mainClass", null));
         ver.minimumLauncherVersion = json.getInt("minimumLauncherVersion", 21);
-        if (ver.minimumLauncherVersion > Launcher.VERSION) {
+        if (ver.minimumLauncherVersion > Launcher.MOJANG_LAUNCHER_VERSION) {
             Launcher.LOGGER.log(
                     Level.WARNING,
                     "MCIGUI currently only supports minimumLauncherVersion up to {0}, but {1}''s is {2}.",
                     new Object[] {
-                        Launcher.VERSION,
+                        Launcher.MOJANG_LAUNCHER_VERSION,
                         ver.id,
                         ver.minimumLauncherVersion
                     }

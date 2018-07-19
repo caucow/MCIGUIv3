@@ -123,7 +123,7 @@ public class LauncherConfig {
     
     public void save() {
         JsonConfig json = new JsonConfig();
-        json.set("version", Launcher.VERSION);
+        json.set("version", Launcher.MOJANG_LAUNCHER_VERSION);
         if (javaWindows != null)
             json.set("javaLoc.windows", javaWindows);
         if (javaMac != null)

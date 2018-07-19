@@ -1,6 +1,6 @@
 package com.caucraft.mciguiv3.pmgr;
 
-import com.caucraft.mciguiv3.util.WaitProgressDialog;
+import com.caucraft.mciguiv3.launch.Launcher;
 import com.google.gson.internal.LinkedTreeMap;
 import java.awt.Dialog;
 import java.io.File;
@@ -21,7 +21,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import javax.swing.JDialog;
-import javax.swing.JFrame;
 
 /**
  *
@@ -31,7 +30,7 @@ public class PasswordManager {
     
     private static final byte[] passTestPlain = "Hello World!".getBytes(StandardCharsets.UTF_8);
     private static final int ITERATIONS = 250000;
-    private final JFrame parentWindow;
+    private final Launcher launcher;
     private final File passFile;
     private LinkedTreeMap<String, byte[]> loginMap;
     private byte[] passSalt;
@@ -42,8 +41,8 @@ public class PasswordManager {
     private QuestionableEncryptionThing passThing;
     private QuestionableEncryptionThing idThing;
     
-    public PasswordManager(JFrame parentWindow, File passFile) {
-        this.parentWindow = parentWindow;
+    public PasswordManager(Launcher launcher, File passFile) {
+        this.launcher = launcher;
         this.passFile = passFile;
     }
     
@@ -105,7 +104,7 @@ public class PasswordManager {
                 Arrays.fill(pass, '\u0000');
             }
         } catch (DataLengthException | InvalidCipherTextException e) {
-            JOptionPane.showMessageDialog(parentWindow, "Wrong password!");
+            JOptionPane.showMessageDialog(null, "Wrong password!");
             if (pass != null) {
                 Arrays.fill(pass, '\u0000');
             }
@@ -117,7 +116,7 @@ public class PasswordManager {
         try {
             data = decryptWithCID(data, clientToken);
         } catch (DataLengthException | InvalidCipherTextException e) {
-            JOptionPane.showMessageDialog(parentWindow, "Client ID changed, cannot decrypt");
+            JOptionPane.showMessageDialog(null, "Client ID changed, cannot decrypt");
             return false;
         }
         ByteBuffer b = ByteBuffer.wrap(data);
@@ -166,7 +165,7 @@ public class PasswordManager {
             ePassData = passThing.encrypt(data);
 //            ePassData = Arrays.concatenate(passSalt, data);
         } catch (DataLengthException | InvalidCipherTextException e) {
-            JOptionPane.showMessageDialog(parentWindow, "Unable to re-encrypt file.");
+            JOptionPane.showMessageDialog(null, "Unable to re-encrypt file.");
             return false;
         }
         return true;
@@ -200,7 +199,7 @@ public class PasswordManager {
         try {
             edata = decryptWithPassword(edata, rememberPass);
         } catch (DataLengthException | InvalidCipherTextException e) {
-            JOptionPane.showMessageDialog(parentWindow, "Wrong password!");
+            JOptionPane.showMessageDialog(null, "Wrong password!");
             return null;
         }
         if (edata == null) {
@@ -209,7 +208,7 @@ public class PasswordManager {
         try {
             edata = decryptWithCID(edata, clientToken);
         } catch (DataLengthException | InvalidCipherTextException e) {
-            JOptionPane.showMessageDialog(parentWindow, "Client ID changed, cannot decrypt");
+            JOptionPane.showMessageDialog(null, "Client ID changed, cannot decrypt");
             return null;
         }
         return edata;
@@ -217,39 +216,37 @@ public class PasswordManager {
     
     private byte[] decryptWithPassword(final char[] pass, final byte[] edata, final boolean rememberPass) throws DataLengthException, InvalidCipherTextException {
         try {
-            return WaitProgressDialog.<byte[]>waitForAction(parentWindow, "Decrypting...", (Object... args) -> {
-                QuestionableEncryptionThing thing = passThing;
-                char[] master = pass;
-                if (thing == null || requirePassword) {
-                    if (master == null) {
-                        master = PasswordDialog.getPassword(parentWindow, "Enter Master Password");
-                    }
-                    if (master == null) {
-                        return null;
-                    }
-                    thing = new QuestionableEncryptionThing(master, passSalt, ITERATIONS);
+            QuestionableEncryptionThing thing = passThing;
+            char[] master = pass;
+            if (thing == null || requirePassword) {
+                if (master == null) {
+                    master = PasswordDialog.getPassword(null, "Enter Master Password");
                 }
-                byte[] pdata;
-                try {
-                    pdata = thing.decrypt(edata);
-                } catch (DataLengthException | InvalidCipherTextException e) {
-                    if (master != null) {
-                        Arrays.fill(master, '\u0000');
-                    }
-                    throw e;
+                if (master == null) {
+                    return null;
                 }
-                if (passTestBytes == null) {
-                    setMasterPassword(master);
-                }
+                thing = new QuestionableEncryptionThing(master, passSalt, ITERATIONS);
+            }
+            byte[] pdata;
+            try {
+                pdata = thing.decrypt(edata);
+            } catch (DataLengthException | InvalidCipherTextException e) {
                 if (master != null) {
                     Arrays.fill(master, '\u0000');
                 }
-                if (rememberPass) {
-                    requirePassword = false;
-                    passThing = thing;
-                }
-                return pdata;
-            });
+                throw e;
+            }
+            if (passTestBytes == null) {
+                setMasterPassword(master);
+            }
+            if (master != null) {
+                Arrays.fill(master, '\u0000');
+            }
+            if (rememberPass) {
+                requirePassword = false;
+                passThing = thing;
+            }
+            return pdata;
         } catch (Exception e) {
             if (e instanceof DataLengthException) {
                 throw (DataLengthException)e;
@@ -258,7 +255,7 @@ public class PasswordManager {
                 throw (InvalidCipherTextException)e;
             }
             e.printStackTrace();
-            JOptionPane.showMessageDialog(parentWindow, "Problem decrypting with password: " + e.getClass().getSimpleName());
+            JOptionPane.showMessageDialog(null, "Problem decrypting with password: " + e.getClass().getSimpleName());
             return null;
         }
     }
@@ -269,14 +266,8 @@ public class PasswordManager {
     
     private byte[] decryptWithCID(final byte[] edata, String clientToken) throws DataLengthException, InvalidCipherTextException {
         try {
-            return WaitProgressDialog.<byte[]>waitForAction(parentWindow, "Decrypting...", (Object... args) -> {
-                setIdThing(clientToken);
-                try {
-                    return idThing.decrypt(edata);
-                } catch (DataLengthException | InvalidCipherTextException e) {
-                    throw e;
-                }
-            });
+            setIdThing(clientToken);
+            return idThing.decrypt(edata);
         } catch (Exception e) {
             if (e instanceof DataLengthException) {
                 throw (DataLengthException)e;
@@ -285,48 +276,39 @@ public class PasswordManager {
                 throw (InvalidCipherTextException)e;
             }
             e.printStackTrace();
-            JOptionPane.showMessageDialog(parentWindow, "Problem decrypting with client ID: " + e.getClass().getSimpleName());
+            JOptionPane.showMessageDialog(null, "Problem decrypting with client ID: " + e.getClass().getSimpleName());
             return null;
         }
     }
     
     public QuestionableEncryptionThing validateMasterPassword(final char[] password) {
         try {
-            return WaitProgressDialog.<QuestionableEncryptionThing>waitForAction(parentWindow, "Validating master password...", (Object... args) -> {
-                if (passTestBytes == null) {
-                    throw new IllegalStateException("Master password hasn't been entered yet!");
-                }
-                QuestionableEncryptionThing thing = new QuestionableEncryptionThing(password, passSalt, ITERATIONS);
-                try {
-                    byte[] test = thing.encrypt(passTestPlain);
-                    if (Arrays.areEqual(test, passTestBytes)) {
-                        return thing;
-                    } else {
-                        return null;
-                    }
-                } catch (DataLengthException | InvalidCipherTextException e) {
-                    return null;
-                }
-            });
+        if (passTestBytes == null) {
+            throw new IllegalStateException("Master password hasn't been entered yet!");
+        }
+        QuestionableEncryptionThing thing = new QuestionableEncryptionThing(password, passSalt, ITERATIONS);
+        byte[] test = thing.encrypt(passTestPlain);
+        if (Arrays.areEqual(test, passTestBytes)) {
+            return thing;
+        } else {
+            return null;
+        }
         } catch (Exception e) {
             return null;
         }
     }
     
     private QuestionableEncryptionThing setMasterPassword(final char[] password) {
+        QuestionableEncryptionThing thing = new QuestionableEncryptionThing(password, passSalt, ITERATIONS);
         try {
-            return WaitProgressDialog.<QuestionableEncryptionThing>waitForAction(parentWindow, "Generating validator...", (Object... args) -> {
-                QuestionableEncryptionThing thing = new QuestionableEncryptionThing(password, passSalt, ITERATIONS);
-                try {
-                    passTestBytes = thing.encrypt(passTestPlain);
-                    passThing = thing;
-                    return thing;
-                } catch (InvalidCipherTextException | DataLengthException e) {
-                    JOptionPane.showMessageDialog(parentWindow, "Error setting master password, launcher may need to be restarted.");
-                }
-                return null;
-            });
-        } catch (Exception e) {}
+            passTestBytes = thing.encrypt(passTestPlain);
+            passThing = thing;
+            return thing;
+        } catch (InvalidCipherTextException | DataLengthException e) {
+            JOptionPane.showMessageDialog(null, "Error setting master password, launcher may need to be restarted.");
+        } catch (Exception e) {
+            
+        }
         return null;
     }
     
@@ -352,28 +334,28 @@ public class PasswordManager {
     public void editPasswords(String clientToken) {
         boolean isPassSet = isPasswordSet();
         if (isPassSet && !isDecrypted() && !decryptFile(clientToken)) {
-            JOptionPane.showMessageDialog(parentWindow, "Couldn't decrypt accounts file.");
+            JOptionPane.showMessageDialog(null, "Couldn't decrypt accounts file.");
             return;
         }
         QuestionableEncryptionThing thing;
         if (isPassSet) {
-            char[] master = PasswordDialog.getPassword(parentWindow, "Enter Master Password");
+            char[] master = PasswordDialog.getPassword(null, "Enter Master Password");
             if (master == null) {
                 return;
             }
             thing = validateMasterPassword(master);
             Arrays.fill(master, '\u0000');
         } else {
-            char[] master = PasswordDialog.getPassword(parentWindow, "Set Master Password");
+            char[] master = PasswordDialog.getPassword(null, "Set Master Password");
             if (master == null) {
                 return;
             }
-            char[] confirm = PasswordDialog.getPassword(parentWindow, "Confirm Master Password");
+            char[] confirm = PasswordDialog.getPassword(null, "Confirm Master Password");
             if (confirm == null) {
                 return;
             }
             if (!Arrays.areEqual(master, confirm)) {
-                JOptionPane.showMessageDialog(parentWindow, "Passwords do not match!");
+                JOptionPane.showMessageDialog(null, "Passwords do not match!");
                 Arrays.fill(master, '\u0000');
                 Arrays.fill(confirm, '\u0000');
                 return;
@@ -386,7 +368,7 @@ public class PasswordManager {
             loginMap = new LinkedTreeMap<>();
         }
         if (thing == null) {
-            JOptionPane.showMessageDialog(parentWindow, "Wrong password.");
+            JOptionPane.showMessageDialog(null, "Wrong password.");
             return;
         }
         setIdThing(clientToken);
@@ -398,10 +380,10 @@ public class PasswordManager {
             passes[x] = e.getValue();
             ++x;
         }
-        JDialog editDialog = new JDialog(parentWindow, Dialog.ModalityType.DOCUMENT_MODAL);
+        JDialog editDialog = new JDialog(launcher.getMainWindow(), Dialog.ModalityType.DOCUMENT_MODAL);
         editDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
         EditPasswordsDialogPanel editPanel = new EditPasswordsDialogPanel(editDialog, unames, passes, idThing, thing);
-        editDialog.setLocationRelativeTo(parentWindow);
+        editDialog.setLocationRelativeTo(launcher.getMainWindow());
         editDialog.setVisible(true);
         if (!editPanel.getSuccess()) {
             return;
@@ -416,10 +398,10 @@ public class PasswordManager {
             if (encryptFile()) {
                 save();
             } else {
-                JOptionPane.showMessageDialog(parentWindow, "Could not re-encrypt file.");
+                JOptionPane.showMessageDialog(null, "Could not re-encrypt file.");
             }
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(parentWindow, "Could not save re-encrypted file.");
+            JOptionPane.showMessageDialog(null, "Could not save re-encrypted file.");
         }
     }
     
@@ -432,14 +414,13 @@ public class PasswordManager {
     
     private void setIdThing(String clientToken) {
         try {
-            WaitProgressDialog.<Void>waitForAction(parentWindow, "Creating secondary cipher...", (Object... args) -> {
-                if (idThing == null) {
-                    char[] idChars = clientToken.toCharArray();
-                    idThing = new QuestionableEncryptionThing(idChars, idSalt, ITERATIONS);
-                }
-                return null;
-            });
-        } catch (Exception e) {}
+            if (idThing == null) {
+                char[] idChars = clientToken.toCharArray();
+                idThing = new QuestionableEncryptionThing(idChars, idSalt, ITERATIONS);
+            }
+        } catch (Exception e) {
+            
+        }
     }
     
     public void forgetPassword() {
@@ -451,29 +432,29 @@ public class PasswordManager {
             return;
         }
         if (!isDecrypted() && !decryptFile(clientToken)) {
-            JOptionPane.showMessageDialog(parentWindow, "Could not decrypt accounts file.");
+            JOptionPane.showMessageDialog(null, "Could not decrypt accounts file.");
             return;
         }
-        char[] master = PasswordDialog.getPassword(parentWindow, "Enter Old Master Password");
+        char[] master = PasswordDialog.getPassword(null, "Enter Old Master Password");
         if (master == null) {
             return;
         }
         QuestionableEncryptionThing thing = validateMasterPassword(master);
         Arrays.fill(master, '\u0000');
         if (thing == null) {
-            JOptionPane.showMessageDialog(parentWindow, "Wrong password!");
+            JOptionPane.showMessageDialog(null, "Wrong password!");
             return;
         }
-        master = PasswordDialog.getPassword(parentWindow, "Set Master Password");
+        master = PasswordDialog.getPassword(null, "Set Master Password");
         if (master == null) {
             return;
         }
-        char[] confirm = PasswordDialog.getPassword(parentWindow, "Confirm Master Password");
+        char[] confirm = PasswordDialog.getPassword(null, "Confirm Master Password");
         if (confirm == null) {
             return;
         }
         if (!Arrays.areEqual(master, confirm)) {
-            JOptionPane.showMessageDialog(parentWindow, "Passwords do not match!");
+            JOptionPane.showMessageDialog(null, "Passwords do not match!");
             Arrays.fill(master, '\u0000');
             Arrays.fill(confirm, '\u0000');
             return;
@@ -482,7 +463,7 @@ public class PasswordManager {
         byte[] newSalt = getSalt(32);
         QuestionableEncryptionThing newThing;
         try {
-            newThing = WaitProgressDialog.<QuestionableEncryptionThing>waitForAction(parentWindow, "Generating new cipher...", (Object... args) -> new QuestionableEncryptionThing((char[]) args[0], (byte[]) args[1], ITERATIONS), master, newSalt);
+            newThing = new QuestionableEncryptionThing(master, newSalt, ITERATIONS);
         } catch (Exception e) {
             return;
         }
@@ -492,14 +473,14 @@ public class PasswordManager {
             try {
                 data = thing.decrypt(data);
             } catch (DataLengthException | InvalidCipherTextException e) {
-                JOptionPane.showMessageDialog(parentWindow, "Could not decrypt password for " + s + ". Removing it from the list.");
+                JOptionPane.showMessageDialog(null, "Could not decrypt password for " + s + ". Removing it from the list.");
                 loginMap.remove(s);
                 continue;
             }
             try {
                 data = newThing.encrypt(data);
             } catch (DataLengthException | InvalidCipherTextException e) {
-                JOptionPane.showMessageDialog(parentWindow, "Could not re-encrypt password for " + s + ". Removing it from the list.");
+                JOptionPane.showMessageDialog(null, "Could not re-encrypt password for " + s + ". Removing it from the list.");
                 loginMap.remove(s);
                 continue;
             }
@@ -513,10 +494,10 @@ public class PasswordManager {
             if (encryptFile()) {
                 save();
             } else {
-                JOptionPane.showMessageDialog(parentWindow, "Could not re-encrypt file.");
+                JOptionPane.showMessageDialog(null, "Could not re-encrypt file.");
             }
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(parentWindow, "Could not save re-encrypted file.");
+            JOptionPane.showMessageDialog(null, "Could not save re-encrypted file.");
         }
     }
 }
