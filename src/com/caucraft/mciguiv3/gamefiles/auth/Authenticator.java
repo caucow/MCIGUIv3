@@ -3,13 +3,10 @@ package com.caucraft.mciguiv3.gamefiles.auth;
 import com.caucraft.mciguiv3.gamefiles.profiles.AuthenticatedUser;
 import com.caucraft.util.HttpPayload;
 import com.caucraft.util.JsonConfig;
-import com.caucraft.mciguiv3.util.Task;
-import com.caucraft.mciguiv3.util.TaskList;
 import com.google.gson.JsonParser;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
@@ -42,19 +39,8 @@ public class Authenticator {
         HttpPayload response = HttpPayload.getPayload("https://authserver.mojang.com/authenticate", "POST", "application/json", json.toString());
         
         if (response.getResponseCode() >= 400) {
-            try {
-                JsonConfig error = new JsonConfig(new JsonParser().parse(response.getPayload()));
-                if ("ForbiddenOperationException".equals(error.getString("error", null))) {
-                    throw new ForbiddenOperationException(error.getString("errorMessage", null));
-                } else {
-                    throw new IOException(response.getResponseCode() + " " + response.getPayload());
-                }
-            } catch (Exception e) {
-                if (e instanceof ForbiddenOperationException || e instanceof IOException) {
-                    throw e;
-                }
-                throw new IOException(response.getPayload(), e);
-            }
+            getError(response);
+            return null;
         } else {
             JsonConfig responseJson = new JsonConfig(new JsonParser().parse(response.getPayload()));
             JsonConfig profileJson = new JsonConfig();
@@ -80,19 +66,8 @@ public class Authenticator {
         HttpPayload response = HttpPayload.getPayload("https://authserver.mojang.com/refresh", "POST", "application/json", json.toString());
         
         if (response.getResponseCode() >= 400) {
-            try {
-                JsonConfig error = new JsonConfig(new JsonParser().parse(response.getPayload()));
-                if ("ForbiddenOperationException".equals(error.getString("error", null))) {
-                    throw new ForbiddenOperationException(error.getString("errorMessage", null));
-                } else {
-                    throw new IOException(response.getResponseCode() + " " + response.getPayload());
-                }
-            } catch (Exception e) {
-                if (e instanceof ForbiddenOperationException || e instanceof IOException) {
-                    throw e;
-                }
-                throw new IOException(response.getPayload(), e);
-            }
+            getError(response);
+            return null;
         } else {
             JsonConfig responseJson = new JsonConfig(new JsonParser().parse(response.getPayload()));
             JsonConfig profileJson = new JsonConfig();
@@ -121,19 +96,8 @@ public class Authenticator {
         } else if (response.getResponseCode() == 403) {
             return false;
         } else {
-            try {
-                JsonConfig error = new JsonConfig(new JsonParser().parse(response.getPayload()));
-                if ("ForbiddenOperationException".equals(error.getString("error", null))) {
-                    throw new ForbiddenOperationException(error.getString("errorMessage", null));
-                } else {
-                    throw new IOException("Error " + response.getResponseCode() + ": " + response.getPayload());
-                }
-            } catch (Exception e) {
-                if (e instanceof ForbiddenOperationException || e instanceof IOException) {
-                    throw e;
-                }
-                throw new IOException(response.getPayload(), e);
-            }
+            getError(response);
+            return false;
         }
     }
     
@@ -149,19 +113,28 @@ public class Authenticator {
         } else if (response.getResponseCode() == 403) {
             return false;
         } else {
-            try {
-                JsonConfig error = new JsonConfig(new JsonParser().parse(response.getPayload()));
-                if ("ForbiddenOperationException".equals(error.getString("error", null))) {
-                    throw new ForbiddenOperationException(error.getString("errorMessage", null));
-                } else {
-                    throw new IOException(response.getResponseCode() + " " + response.getPayload());
-                }
-            } catch (Exception e) {
-                if (e instanceof ForbiddenOperationException || e instanceof IOException) {
-                    throw e;
-                }
-                throw new IOException(response.getPayload(), e);
+            getError(response);
+            return false;
+        }
+    }
+    
+    private static void getError(HttpPayload response) throws IOException {
+        try {
+            JsonConfig error = new JsonConfig(new JsonParser().parse(response.getPayload()));
+            if ("ForbiddenOperationException".equals(error.getString("error", null))) {
+                throw new ForbiddenOperationException(error.getString("errorMessage", null));
+            } else if ("IllegalArgumentException".equals(error.getString("error", null))) {
+                throw new IllegalArgumentException(error.getString("errorMessage", null));
+            } else {
+                throw new IOException(response.getResponseCode() + " " + response.getPayload());
             }
+        } catch (Exception e) {
+            if (e instanceof ForbiddenOperationException
+                    || e instanceof IllegalArgumentException
+                    || e instanceof IOException) {
+                throw e;
+            }
+            throw new IOException(response.getPayload(), e);
         }
     }
 }
