@@ -220,7 +220,7 @@ public class PasswordManager {
             char[] master = pass;
             if (thing == null || requirePassword) {
                 if (master == null) {
-                    master = PasswordDialog.getPassword(null, "Enter Master Password");
+                    master = PasswordDialog.getPassword(null, "Enter Master Password", false);
                 }
                 if (master == null) {
                     return null;
@@ -339,18 +339,18 @@ public class PasswordManager {
         }
         QuestionableEncryptionThing thing;
         if (isPassSet) {
-            char[] master = PasswordDialog.getPassword(null, "Enter Master Password");
+            char[] master = PasswordDialog.getPassword(null, "Enter Master Password", false);
             if (master == null) {
                 return;
             }
             thing = validateMasterPassword(master);
             Arrays.fill(master, '\u0000');
         } else {
-            char[] master = PasswordDialog.getPassword(null, "Set Master Password");
+            char[] master = PasswordDialog.getPassword(null, "Set Master Password", false);
             if (master == null) {
                 return;
             }
-            char[] confirm = PasswordDialog.getPassword(null, "Confirm Master Password");
+            char[] confirm = PasswordDialog.getPassword(null, "Confirm Master Password", false);
             if (confirm == null) {
                 return;
             }
@@ -438,7 +438,7 @@ public class PasswordManager {
             JOptionPane.showMessageDialog(null, "Could not decrypt accounts file.");
             return;
         }
-        char[] master = PasswordDialog.getPassword(null, "Enter Old Master Password");
+        char[] master = PasswordDialog.getPassword(null, "Enter Old Master Password", false);
         if (master == null) {
             return;
         }
@@ -448,11 +448,11 @@ public class PasswordManager {
             JOptionPane.showMessageDialog(null, "Wrong password!");
             return;
         }
-        master = PasswordDialog.getPassword(null, "Set Master Password");
+        master = PasswordDialog.getPassword(null, "Set Master Password", false);
         if (master == null) {
             return;
         }
-        char[] confirm = PasswordDialog.getPassword(null, "Confirm Master Password");
+        char[] confirm = PasswordDialog.getPassword(null, "Confirm Master Password", false);
         if (confirm == null) {
             return;
         }

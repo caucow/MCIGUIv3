@@ -5,6 +5,8 @@ import com.caucraft.mciguiv3.components.RandomTexturedPanel;
 import com.caucraft.mciguiv3.gamefiles.profiles.AuthenticatedUser;
 import com.caucraft.mciguiv3.launch.Launcher;
 import com.caucraft.mciguiv3.pmgr.PasswordDialog;
+import com.caucraft.mciguiv3.pmgr.PasswordDialogPanel;
+import com.caucraft.mciguiv3.pmgr.PasswordManager;
 import com.caucraft.mciguiv3.util.ImageResources;
 import com.caucraft.mciguiv3.util.Task;
 import com.caucraft.mciguiv3.util.TaskList;
@@ -15,10 +17,12 @@ import java.util.Collection;
 import java.util.TreeSet;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.border.LineBorder;
@@ -126,6 +130,9 @@ public class AuthPanel extends RandomTexturedPanel {
             AuthenticatedUser user = launcher.getProfiles().getAuthDb().getUserByName((String)playAsComboBox.getSelectedItem());
             TaskList authTaskList = new TaskList("Logging in as existing user");
             AtomicBoolean loggedIn = new AtomicBoolean(false);
+            AtomicReference<char[]> storedPass = new AtomicReference<>();
+            PasswordManager pmgr = launcher.getPasswordManager();
+            PasswordDialog pd = PasswordDialog.getPasswordDialog(launcher.getMainWindow(), "Enter password for " + user.getDisplayName(), pmgr.isPasswordSet() && !pmgr.isDecrypted());
             
             Task validateTask = new Task("Checking existing auth token") {
                 @Override
@@ -151,6 +158,8 @@ public class AuthPanel extends RandomTexturedPanel {
                     } catch (IOException e) {
                         statusLabel.setText(String.format("<html><center>Unable to connect to Mojang's servers.<BR>%s: %s</center></html>", e.getClass().getSimpleName(), e.getMessage()));
                         throw e;
+                    } catch (ForbiddenOperationException | IllegalArgumentException e ) {
+                        statusLabel.setText("<html><center>Could not validate access token.</center></html>");
                     }
                 }
             };
@@ -178,9 +187,48 @@ public class AuthPanel extends RandomTexturedPanel {
                     } catch (IOException e) {
                         statusLabel.setText(String.format("<html><center>Unable to connect to Mojang's servers.<BR>%s: %s</center></html>", e.getClass().getSimpleName(), e.getMessage()));
                         throw e;
-                    } catch (ForbiddenOperationException e) {
+                    } catch (ForbiddenOperationException | IllegalArgumentException e ) {
                         statusLabel.setText("<html><center>Could not refresh access token.</center></html>");
                     }
+                }
+            };
+            Task passMgrTask = new Task("Logging in with password manager") {
+                @Override
+                public float getProgress() {
+                    return -1.0F;
+                }
+                
+                @Override
+                public void run() throws Exception {
+                    if (loggedIn.get()) {
+                        return;
+                    }
+                    // no password file
+                    if (!pmgr.isPasswordSet()) {
+                        statusLabel.setText(String.format("<html><center>%s</center></html>", "There is no accounts file<BR>in the password manager."));
+                        return;
+                    }
+                    // passwords not decrypted
+                    if (!pmgr.isDecrypted()) {
+                        pd.setVisible(true);
+                        if (pd.getResult() == PasswordDialogPanel.Result.CANCEL) {
+                            return;
+                        }
+                        if (pd.getResult() == PasswordDialogPanel.Result.ACCEPT) {
+                            storedPass.set(pd.getPassword());
+                        }
+                        if (!pmgr.decryptFile(pd.getPassword(), launcher.getProfiles().getClientToken())) {
+                            statusLabel.setText(String.format("<html><center>%s</center></html>", "Could not decrypt accounts<BR>file in password manager."));
+                            throw new Exception("Could not decrypt accounts file.");
+                        }
+                        launcher.refreshPassManager();
+                    }
+                    // passwords decrypted
+                    if (!pmgr.hasPassword(user.getUsername())) {
+                        statusLabel.setText(String.format("<html><center>%s%s</center></html>", "Accounts file has no password<BR>for ", user.getDisplayName()));
+                        return;
+                    }
+                    storedPass.set(pmgr.getPassword(user.getUsername(), true, false, launcher.getProfiles().getClientToken()).toCharArray());
                 }
             };
             Task loginTask = new Task("Logging in with credentials") {
@@ -194,10 +242,20 @@ public class AuthPanel extends RandomTexturedPanel {
                     if (loggedIn.get()) {
                         return;
                     }
+                    if (pd.getResult() == PasswordDialogPanel.Result.CANCEL) {
+                        return;
+                    }
                     try {
-                        char[] pass = PasswordDialog.getPassword(launcher.getMainWindow(), "Enter password for " + user.getDisplayName());
-                        if (pass == null) {
-                            return;
+                        char[] pass;
+                        if (storedPass.get() == null) {
+                            pd.setCanDecrypt(false);
+                            pd.setVisible(true);
+                            pass = pd.getPassword();
+                            if (pass == null) {
+                                return;
+                            }
+                        } else {
+                            pass = storedPass.get();
                         }
                         AuthenticatedUser newUser = Authenticator.loginWithPassword(launcher.getProfiles().getClientToken(), user.getUsername(), new String(pass));
                         loggedIn.set(true);
@@ -211,13 +269,15 @@ public class AuthPanel extends RandomTexturedPanel {
                     } catch (IOException e) {
                         statusLabel.setText(String.format("<html><center>Unable to connect to Mojang's servers.<BR>%s: %s</center></html>", e.getClass().getSimpleName(), e.getMessage()));
                         throw e;
-                    } catch (ForbiddenOperationException e) {
+                    } catch (ForbiddenOperationException | IllegalArgumentException e) {
                         statusLabel.setText(String.format("<html><center>%s</center></html>", e.getMessage()));
+                        throw e;
                     }
                 }
             };
             authTaskList.addTask(validateTask);
             authTaskList.addTask(refreshTask);
+            authTaskList.addTask(passMgrTask);
             authTaskList.addTask(loginTask);
             launcher.getAuthTaskMgr().addTask(authTaskList);
             new Thread(() -> {
@@ -280,8 +340,21 @@ public class AuthPanel extends RandomTexturedPanel {
                             return;
                         }
                         if (password.length == 0) {
-                            statusLabel.setText("Password manager currently unsupported.");
-                            return;
+                            PasswordManager passMgr = launcher.getPasswordManager();
+                            if (!passMgr.isPasswordSet()) {
+                                statusLabel.setText(String.format("<html><center>%s</center></html>", "There is no accounts file<BR>in the password manager."));
+                                return;
+                            }
+                            if (!passMgr.isDecrypted() && !passMgr.decryptFile(launcher.getProfiles().getClientToken())) {
+                                statusLabel.setText(String.format("<htmnl><center>%s</center></html>", "Could not decrypt accounts<BR>file in password manager."));
+                                return;
+                            }
+                            launcher.refreshPassManager();
+                            if (!passMgr.hasPassword(username)) {
+                                statusLabel.setText(String.format("<html><center>%s%s</center></html>", "Accounts file has no password<BR>for ", username));
+                                return;
+                            }
+                            password = passMgr.getPassword(username, true, false, launcher.getProfiles().getClientToken()).toCharArray();
                         }
                         
                         AuthenticatedUser newUser = Authenticator.loginWithPassword(launcher.getProfiles().getClientToken(), username, new String(password));
@@ -296,7 +369,7 @@ public class AuthPanel extends RandomTexturedPanel {
                     } catch (IOException e) {
                         statusLabel.setText(String.format("<html><center>Unable to connect to Mojang's servers.<BR>%s: %s</center></html>", e.getClass().getSimpleName(), e.getMessage()));
                         throw e;
-                    } catch (ForbiddenOperationException e) {
+                    } catch (ForbiddenOperationException | IllegalArgumentException e) {
                         statusLabel.setText(String.format("<html><center>%s</center></html>", e.getMessage()));
                     } catch (Exception e) {
                         e.printStackTrace();

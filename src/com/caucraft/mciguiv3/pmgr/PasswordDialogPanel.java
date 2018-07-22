@@ -12,9 +12,14 @@ public class PasswordDialogPanel extends javax.swing.JPanel {
     /**
      * Creates new form PasswordDialog
      */
-    public PasswordDialogPanel(PasswordDialog pDialog) {
+    public PasswordDialogPanel(PasswordDialog pDialog, boolean canDecrypt) {
         initComponents();
         passDialog = pDialog;
+        decryptButton.setVisible(canDecrypt);
+    }
+    
+    public void setCanDecrypt(boolean canDecrypt) {
+        decryptButton.setVisible(canDecrypt);
     }
 
     /**
@@ -31,6 +36,7 @@ public class PasswordDialogPanel extends javax.swing.JPanel {
         showPassCheckbox = new javax.swing.JCheckBox();
         okButton = new javax.swing.JButton();
         cancelButton = new javax.swing.JButton();
+        decryptButton = new javax.swing.JButton();
 
         passFieldLabel.setText("Password:");
         passFieldLabel.setFocusable(false);
@@ -66,6 +72,13 @@ public class PasswordDialogPanel extends javax.swing.JPanel {
             }
         });
 
+        decryptButton.setText("Decrypt Accounts File");
+        decryptButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                decryptButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -79,9 +92,11 @@ public class PasswordDialogPanel extends javax.swing.JPanel {
                         .addComponent(passField))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addComponent(okButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(decryptButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 44, Short.MAX_VALUE)
                         .addComponent(cancelButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 161, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(showPassCheckbox)))
                 .addContainerGap())
         );
@@ -96,7 +111,8 @@ public class PasswordDialogPanel extends javax.swing.JPanel {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(showPassCheckbox)
                     .addComponent(okButton)
-                    .addComponent(cancelButton))
+                    .addComponent(cancelButton)
+                    .addComponent(decryptButton))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -144,21 +160,32 @@ public class PasswordDialogPanel extends javax.swing.JPanel {
                 break;
         }
     }//GEN-LAST:event_keyTyped
+
+    private void decryptButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_decryptButtonActionPerformed
+        result = Result.DECRYPT;
+        passDialog.setVisible(false);
+    }//GEN-LAST:event_decryptButtonActionPerformed
     
     public char[] getPassword() {
-        if (result == Result.ACCEPT) {
+        if (result == Result.ACCEPT || result == Result.DECRYPT) {
             return passField.getPassword();
         }
         return null;
     }
     
+    public Result getResult() {
+        return result;
+    }
+    
     public enum Result {
         ACCEPT(),
+        DECRYPT(),
         CANCEL();
     }
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancelButton;
+    private javax.swing.JButton decryptButton;
     private javax.swing.JButton okButton;
     private javax.swing.JPasswordField passField;
     private javax.swing.JLabel passFieldLabel;

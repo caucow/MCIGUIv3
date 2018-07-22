@@ -19,6 +19,7 @@ import com.caucraft.mciguiv3.launch.gameinstance.GameMonitor;
 import com.caucraft.mciguiv3.launch.gameinstance.GameRunnerTask;
 import com.caucraft.mciguiv3.launch.gameinstance.PastRunsPanel;
 import com.caucraft.mciguiv3.pmgr.PasswordDialog;
+import com.caucraft.mciguiv3.pmgr.PasswordDialogPanel;
 import com.caucraft.mciguiv3.pmgr.PasswordManager;
 import com.caucraft.mciguiv3.update.AboutWindow;
 import com.caucraft.mciguiv3.update.LauncherVersions;
@@ -51,6 +52,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.logging.Level;
@@ -97,7 +99,7 @@ public final class Launcher {
             OS_NAME = OS.LINUX;
         } else {
             OS_NAME = null;
-            System.out.println("[ERROR] Unknown or unaccounted for OS: " + osname);
+            LOGGER.log(Level.SEVERE, "[ERROR] Unknown or unaccounted for OS: {0}", osname);
         }
         OS_VER = System.getProperty("os.version");
         OS_ARCH = System.getProperty("sun.arch.data.model");
@@ -182,7 +184,6 @@ public final class Launcher {
             while (entries.hasMoreElements()) {
                 JarEntry e = entries.nextElement();
                 String name = e.getName();
-                System.out.println(e);
                 if (name.endsWith(".class")) {
                     Class.forName(name.substring(0, name.length() - 6).replace('/', '.'));
                 }
@@ -575,6 +576,10 @@ public final class Launcher {
     
     public void reloadPassManager() {
         passMgr.forgetPassword();
+        refreshPassManager();
+    }
+    
+    public void refreshPassManager() {
         passMgrPanel.reloadManagerView();
     }
     
@@ -598,8 +603,6 @@ public final class Launcher {
     public void launchGame() {
         profiles.save(true);
         config.save();
-        
-        hasLoggedInOnce = true;
         
         File mcHome = getMcHome();
         Profile p = profiles.getSelectedProfile();
@@ -665,10 +668,14 @@ public final class Launcher {
             };
             mainTaskMgr.addTask(prepTask);
         } else {
-            TaskList authTaskList = new TaskList("Logging in as existing user");
-            AtomicBoolean loggedIn = new AtomicBoolean(false);
             UUID id = getCurrentUser().getId();
             AuthenticatedUser[] usera = {getCurrentUser()};
+            TaskList authTaskList = new TaskList("Logging in as existing user");
+            AtomicBoolean loggedIn = new AtomicBoolean(getLoggedInOnce());
+            AtomicReference<char[]> storedPass = new AtomicReference<>();
+            PasswordManager pmgr = getPasswordManager();
+            PasswordDialog pd = PasswordDialog.getPasswordDialog(getMainWindow(), "Enter password for " + usera[0].getDisplayName(), pmgr.isPasswordSet() && !pmgr.isDecrypted());
+            
             Task validateTask = new Task("Checking existing auth token") {
                 @Override
                 public float getProgress() {
@@ -690,6 +697,8 @@ public final class Launcher {
                     } catch (IOException e) {
                         LOGGER.log(Level.WARNING, "Could not connect to Mojang's servers: {0}: {1}", new Object[] {e.getClass().getSimpleName(), e.getMessage()});
                         throw e;
+                    } catch (ForbiddenOperationException | IllegalArgumentException e ) {
+                        LOGGER.log(Level.INFO, "Could not validate {0}''s access token: {1}", new Object[] {usera[0].getDisplayName(), e.getMessage()});
                     }
                 }
             };
@@ -717,9 +726,46 @@ public final class Launcher {
                     } catch (IOException e) {
                         LOGGER.log(Level.WARNING, "Could not connect to Mojang's servers: {0}: {1}", new Object[] {e.getClass().getSimpleName(), e.getMessage()});
                         throw e;
-                    } catch (ForbiddenOperationException e) {
-                        LOGGER.log(Level.INFO, "Could not refresh {0}''s access token: {1}", new Object[] {usera[0], e.getMessage()});
+                    } catch (ForbiddenOperationException | IllegalArgumentException e) {
+                        LOGGER.log(Level.INFO, "Could not refresh {0}''s access token: {1}", new Object[] {usera[0].getDisplayName(), e.getMessage()});
                     }
+                }
+            };
+            Task passMgrTask = new Task("Logging in with password manager") {
+                @Override
+                public float getProgress() {
+                    return -1.0F;
+                }
+                
+                @Override
+                public void run() throws Exception {
+                    if (loggedIn.get()) {
+                        return;
+                    }
+                    // no password file
+                    if (!pmgr.isPasswordSet()) {
+                        return;
+                    }
+                    // passwords not decrypted
+                    if (!pmgr.isDecrypted()) {
+                        pd.setVisible(true);
+                        if (pd.getResult() == PasswordDialogPanel.Result.CANCEL) {
+                            return;
+                        }
+                        if (pd.getResult() == PasswordDialogPanel.Result.ACCEPT) {
+                            storedPass.set(pd.getPassword());
+                        }
+                        if (!pmgr.decryptFile(pd.getPassword(), getProfiles().getClientToken())) {
+                            LOGGER.log(Level.INFO, "Could not decrypt accounts file in password manager.");
+                            throw new Exception("Could not decrypt accounts file.");
+                        }
+                        refreshPassManager();
+                    }
+                    // passwords decrypted
+                    if (!pmgr.hasPassword(usera[0].getUsername())) {
+                        return;
+                    }
+                    storedPass.set(pmgr.getPassword(usera[0].getUsername(), true, false, getProfiles().getClientToken()).toCharArray());
                 }
             };
             Task loginTask = new Task("Logging in with credentials") {
@@ -736,11 +782,18 @@ public final class Launcher {
                     usera[0] = profiles.getAuthDb().getUserByUUID(id);
                     LOGGER.log(Level.INFO, "Logging in as {0} using user/pass", usera[0].getDisplayName());
                     try {
-                        char[] pass = PasswordDialog.getPassword(mainWindow, "Enter password for " + usera[0].getDisplayName());
-                        if (pass == null) {
-                            return;
+                        char[] pass;
+                        if (storedPass.get() == null) {
+                            pd.setCanDecrypt(false);
+                            pd.setVisible(true);
+                            pass = pd.getPassword();
+                            if (pass == null) {
+                                return;
+                            }
+                        } else {
+                            pass = storedPass.get();
                         }
-                        usera[0] = Authenticator.loginWithPassword(profiles.getClientToken(), usera[0].getUsername(), new String(pass));
+                        usera[0] = Authenticator.loginWithPassword(getProfiles().getClientToken(), usera[0].getUsername(), new String(pass));
                         loggedIn.set(true);
                         setLoggedInOnce();
                         profiles.getAuthDb().addUser(usera[0]);
@@ -750,8 +803,9 @@ public final class Launcher {
                     } catch (IOException e) {
                         LOGGER.log(Level.WARNING, "Could not connect to Mojang's servers: {0}: {1}", new Object[] {e.getClass().getSimpleName(), e.getMessage()});
                         throw e;
-                    } catch (ForbiddenOperationException e) {
-                        LOGGER.log(Level.INFO, "Could not log in as {0} with user/pass: {1}", new Object[]{usera[0].getUsername(), e.getMessage()});
+                    } catch (ForbiddenOperationException | IllegalArgumentException e) {
+                        LOGGER.log(Level.INFO, "Could not log in as {0} with user/pass: {1}", new Object[]{usera[0].getDisplayName(), e.getMessage()});
+                        JOptionPane.showMessageDialog(getMainPanel(), "Could not log in as " + usera[0].getDisplayName());
                     }
                 }
             };
@@ -828,6 +882,7 @@ public final class Launcher {
             };
             authTaskList.addTask(validateTask);
             authTaskList.addTask(refreshTask);
+            authTaskList.addTask(passMgrTask);
             authTaskList.addTask(loginTask);
             authTaskList.addTask(startTask);
             authTaskMgr.addTask(authTaskList);
@@ -870,10 +925,14 @@ public final class Launcher {
             }
         };
         if (!getLoggedInOnce()) {
-            TaskList authTaskList = new TaskList("Logging in as existing user");
-            AtomicBoolean loggedIn = new AtomicBoolean(getLoggedInOnce());
             UUID id = getCurrentUser().getId();
             AuthenticatedUser[] usera = {getCurrentUser()};
+            TaskList authTaskList = new TaskList("Logging in as existing user");
+            AtomicBoolean loggedIn = new AtomicBoolean(getLoggedInOnce());
+            AtomicReference<char[]> storedPass = new AtomicReference<>();
+            PasswordManager pmgr = getPasswordManager();
+            PasswordDialog pd = PasswordDialog.getPasswordDialog(getMainWindow(), "Enter password for " + usera[0].getDisplayName(), pmgr.isPasswordSet() && !pmgr.isDecrypted());
+            
             Task validateTask = new Task("Checking existing auth token") {
                 @Override
                 public float getProgress() {
@@ -883,9 +942,6 @@ public final class Launcher {
                 @Override
                 public void run() throws Exception {
                     try {
-                        if (loggedIn.get()) {
-                            return;
-                        }
                         usera[0] = profiles.getAuthDb().getUserByUUID(id);
                         LOGGER.log(Level.INFO, "Validating {0}''s access token", usera[0].getDisplayName());
                         if (Authenticator.validateAccessToken(profiles.getClientToken(), usera[0])) {
@@ -898,6 +954,8 @@ public final class Launcher {
                     } catch (IOException e) {
                         LOGGER.log(Level.WARNING, "Could not connect to Mojang's servers: {0}: {1}", new Object[] {e.getClass().getSimpleName(), e.getMessage()});
                         throw e;
+                    } catch (ForbiddenOperationException | IllegalArgumentException e ) {
+                        LOGGER.log(Level.INFO, "Could not validate {0}''s access token: {1}", new Object[] {usera[0].getDisplayName(), e.getMessage()});
                     }
                 }
             };
@@ -925,9 +983,46 @@ public final class Launcher {
                     } catch (IOException e) {
                         LOGGER.log(Level.WARNING, "Could not connect to Mojang's servers: {0}: {1}", new Object[] {e.getClass().getSimpleName(), e.getMessage()});
                         throw e;
-                    } catch (ForbiddenOperationException e) {
-                        LOGGER.log(Level.INFO, "Could not refresh {0}''s access token: {1}", new Object[] {usera[0], e.getMessage()});
+                    } catch (ForbiddenOperationException | IllegalArgumentException e) {
+                        LOGGER.log(Level.INFO, "Could not refresh {0}''s access token: {1}", new Object[] {usera[0].getDisplayName(), e.getMessage()});
                     }
+                }
+            };
+            Task passMgrTask = new Task("Logging in with password manager") {
+                @Override
+                public float getProgress() {
+                    return -1.0F;
+                }
+                
+                @Override
+                public void run() throws Exception {
+                    if (loggedIn.get()) {
+                        return;
+                    }
+                    // no password file
+                    if (!pmgr.isPasswordSet()) {
+                        return;
+                    }
+                    // passwords not decrypted
+                    if (!pmgr.isDecrypted()) {
+                        pd.setVisible(true);
+                        if (pd.getResult() == PasswordDialogPanel.Result.CANCEL) {
+                            return;
+                        }
+                        if (pd.getResult() == PasswordDialogPanel.Result.ACCEPT) {
+                            storedPass.set(pd.getPassword());
+                        }
+                        if (!pmgr.decryptFile(pd.getPassword(), getProfiles().getClientToken())) {
+                            LOGGER.log(Level.INFO, "Could not decrypt accounts file in password manager.");
+                            throw new Exception("Could not decrypt accounts file.");
+                        }
+                        refreshPassManager();
+                    }
+                    // passwords decrypted
+                    if (!pmgr.hasPassword(usera[0].getUsername())) {
+                        return;
+                    }
+                    storedPass.set(pmgr.getPassword(usera[0].getUsername(), true, false, getProfiles().getClientToken()).toCharArray());
                 }
             };
             Task loginTask = new Task("Logging in with credentials") {
@@ -944,11 +1039,18 @@ public final class Launcher {
                     usera[0] = profiles.getAuthDb().getUserByUUID(id);
                     LOGGER.log(Level.INFO, "Logging in as {0} using user/pass", usera[0].getDisplayName());
                     try {
-                        char[] pass = PasswordDialog.getPassword(mainWindow, "Enter password for " + usera[0].getDisplayName());
-                        if (pass == null) {
-                            return;
+                        char[] pass;
+                        if (storedPass.get() == null) {
+                            pd.setCanDecrypt(false);
+                            pd.setVisible(true);
+                            pass = pd.getPassword();
+                            if (pass == null) {
+                                return;
+                            }
+                        } else {
+                            pass = storedPass.get();
                         }
-                        usera[0] = Authenticator.loginWithPassword(profiles.getClientToken(), usera[0].getUsername(), new String(pass));
+                        usera[0] = Authenticator.loginWithPassword(getProfiles().getClientToken(), usera[0].getUsername(), new String(pass));
                         loggedIn.set(true);
                         setLoggedInOnce();
                         profiles.getAuthDb().addUser(usera[0]);
@@ -958,12 +1060,13 @@ public final class Launcher {
                     } catch (IOException e) {
                         LOGGER.log(Level.WARNING, "Could not connect to Mojang's servers: {0}: {1}", new Object[] {e.getClass().getSimpleName(), e.getMessage()});
                         throw e;
-                    } catch (ForbiddenOperationException e) {
-                        LOGGER.log(Level.INFO, "Could not log in as {0} with user/pass: {1}", new Object[]{usera[0].getUsername(), e.getMessage()});
+                    } catch (ForbiddenOperationException | IllegalArgumentException e) {
+                        LOGGER.log(Level.INFO, "Could not log in as {0} with user/pass: {1}", new Object[]{usera[0].getDisplayName(), e.getMessage()});
+                        JOptionPane.showMessageDialog(getMainPanel(), "Could not log in as " + usera[0].getDisplayName());
                     }
                 }
             };
-            Task startTask = new Task("Starting game") {
+            Task startTask = new Task("Installing game version") {
                 @Override
                 public float getProgress() {
                     return -1.0F;
@@ -971,11 +1074,14 @@ public final class Launcher {
                 
                 @Override
                 public void run() {
-                    mainTaskMgr.addTask(mainTask);
+                    if (loggedIn.get()) {
+                        mainTaskMgr.addTask(mainTask);
+                    }
                 }
             };
             authTaskList.addTask(validateTask);
             authTaskList.addTask(refreshTask);
+            authTaskList.addTask(passMgrTask);
             authTaskList.addTask(loginTask);
             authTaskList.addTask(startTask);
             authTaskMgr.addTask(authTaskList);
