@@ -19,7 +19,7 @@
                     "Removed some debug code that let the game launch with invalid sessions."
                 ]
             }
-        }
+        },
         "3.1.1": {
             "url": "https://github.com/caucow/MCIGUIv3/releases/download/3.1.1/MCIGUIv3.jar",
             "size": 5900701,
