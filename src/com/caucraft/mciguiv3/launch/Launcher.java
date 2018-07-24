@@ -671,7 +671,7 @@ public final class Launcher {
             UUID id = getCurrentUser().getId();
             AuthenticatedUser[] usera = {getCurrentUser()};
             TaskList authTaskList = new TaskList("Logging in as existing user");
-            AtomicBoolean loggedIn = new AtomicBoolean(getLoggedInOnce());
+            AtomicBoolean loggedIn = new AtomicBoolean(false);
             AtomicReference<char[]> storedPass = new AtomicReference<>();
             PasswordManager pmgr = getPasswordManager();
             PasswordDialog pd = PasswordDialog.getPasswordDialog(getMainWindow(), "Enter password for " + usera[0].getDisplayName(), pmgr.isPasswordSet() && !pmgr.isDecrypted());
@@ -928,7 +928,7 @@ public final class Launcher {
             UUID id = getCurrentUser().getId();
             AuthenticatedUser[] usera = {getCurrentUser()};
             TaskList authTaskList = new TaskList("Logging in as existing user");
-            AtomicBoolean loggedIn = new AtomicBoolean(getLoggedInOnce());
+            AtomicBoolean loggedIn = new AtomicBoolean(false);
             AtomicReference<char[]> storedPass = new AtomicReference<>();
             PasswordManager pmgr = getPasswordManager();
             PasswordDialog pd = PasswordDialog.getPasswordDialog(getMainWindow(), "Enter password for " + usera[0].getDisplayName(), pmgr.isPasswordSet() && !pmgr.isDecrypted());
