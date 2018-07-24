@@ -266,9 +266,9 @@ public final class Launcher {
         this.mainWindow.getContentPane().setLayout(new GridBagLayout());
         this.logPanel = new LogPanel(LOGGER);
         this.setCurrentScreen(this.logPanel);
-        this.mainTaskMgr = new TaskManager(null);
-        this.secondaryTaskMgr = new TaskManager(null);
-        this.authTaskMgr = new TaskManager(mainWindow);
+        this.mainTaskMgr = new TaskManager(null, false);
+        this.secondaryTaskMgr = new TaskManager(null, true);
+        this.authTaskMgr = new TaskManager(mainWindow, false);
         this.chooserCD = CD;
     }
     

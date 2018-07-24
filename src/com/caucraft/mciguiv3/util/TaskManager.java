@@ -23,6 +23,7 @@ public class TaskManager {
 //    private final Object monitorLock;
 //    private boolean update;
     private Task curTask;
+    private final boolean mildlyLessAnnoying;
     private final LinkedBlockingQueue<Task> tasks;
     private final JFrame progressFrame;
     private final JPanel panel;
@@ -33,7 +34,8 @@ public class TaskManager {
     
     private boolean shutdown;
 
-    public TaskManager(Frame parent) {
+    public TaskManager(Frame parent, boolean mildlyLessAnnoying) {
+        this.mildlyLessAnnoying = mildlyLessAnnoying;
         tasks = new LinkedBlockingQueue<>();
         progressFrame = new JFrame("Task Processor");
         progressFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -259,7 +261,7 @@ public class TaskManager {
                 panel.add(b);
                 lastStack.add(next);
             }
-            if (!progressFrame.isVisible()) {
+            if (!progressFrame.isVisible() && !mildlyLessAnnoying) {
                 progressFrame.setVisible(true);
             }
             progressFrame.pack();
