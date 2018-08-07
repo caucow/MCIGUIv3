@@ -10,11 +10,10 @@
         "3.1.4": {
             "url": "https://github.com/caucow/MCIGUIv3/releases/download/3.1.4/MCIGUIv3.jar",
             "size": 5922097,
-            "date": "2018-08-07T17:29:00-05:00",
+            "date": "2018-08-07T17:35:00-05:00",
             "changelog": {
                 "changed": [
-                    "Replaced debug code with authenticator",
-                    "Made a certain momentary progress pop-up mildlyLessAnnoying."
+                    "Fixed auth error when using special characters in passwords."
                 ]
             }
         },
