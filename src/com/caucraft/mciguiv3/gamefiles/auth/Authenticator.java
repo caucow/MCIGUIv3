@@ -36,7 +36,7 @@ public class Authenticator {
         json.set("password", password);
         json.set("requestUser", true);
         
-        HttpPayload response = HttpPayload.getPayload("https://authserver.mojang.com/authenticate", "POST", "application/json", json.toString());
+        HttpPayload response = HttpPayload.getPayload("https://authserver.mojang.com/authenticate", "POST", "application/json", JsonConfig.escape(json.toString()));
         
         if (response.getResponseCode() >= 400) {
             getError(response);
@@ -63,7 +63,7 @@ public class Authenticator {
         json.set("accessToken", user.getAccessToken());
         json.set("requestUser", true);
         
-        HttpPayload response = HttpPayload.getPayload("https://authserver.mojang.com/refresh", "POST", "application/json", json.toString());
+        HttpPayload response = HttpPayload.getPayload("https://authserver.mojang.com/refresh", "POST", "application/json", JsonConfig.escape(json.toString()));
         
         if (response.getResponseCode() >= 400) {
             getError(response);
@@ -89,7 +89,7 @@ public class Authenticator {
         json.set("clientToken", clientToken);
         json.set("accessToken", user.getAccessToken());
         
-        HttpPayload response = HttpPayload.getPayload("https://authserver.mojang.com/validate", "POST", "application/json", json.toString());
+        HttpPayload response = HttpPayload.getPayload("https://authserver.mojang.com/validate", "POST", "application/json", JsonConfig.escape(json.toString()));
         
         if (response.getResponseCode() == 204) {
             return true;
@@ -106,7 +106,7 @@ public class Authenticator {
         json.set("accessToken", authToken);
         json.set("clientToken", clientToken);
         
-        HttpPayload response = HttpPayload.getPayload("https://authserver.mojang.com/invalidate", "POST", "application/json", json.toString());
+        HttpPayload response = HttpPayload.getPayload("https://authserver.mojang.com/invalidate", "POST", "application/json", JsonConfig.escape(json.toString()));
         
         if (response.getResponseCode() == 204) {
             return true;

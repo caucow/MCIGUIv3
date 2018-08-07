@@ -474,6 +474,20 @@ public class JsonConfig {
         return root.toString();
     }
     
+    public static String escape(String unescaped) {
+        char[] ch = unescaped.toCharArray();
+        StringBuilder e = new StringBuilder();
+        for (char c : ch) {
+            if (c == '\\' || c == '"' || c == '\n' || c == '\r' || c == '\b'
+                    || c == '\f' || c == '\t' || c < 0x32 || c > 0x7F) {
+                e.append(String.format("\\u%04x", (int)c));
+            } else {
+                e.append(c);
+            }
+        }
+        return e.toString();
+    }
+    
     public boolean save(File file) throws IOException {
         boolean noProbs = true;
         try (FileWriter writer = new FileWriter(file)) {
