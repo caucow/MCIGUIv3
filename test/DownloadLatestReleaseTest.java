@@ -29,7 +29,7 @@ import java.util.jar.JarFile;
 public class DownloadLatestReleaseTest {
     
     public static void main(String[] args) throws Exception {
-        TaskManager taskmgr = new TaskManager(null);
+        TaskManager taskmgr = new TaskManager(null, false);
         taskmgr.startTaskThread();
         File mcHome = new File("D:\\Minecraft Stuff\\mcHome_test");
         if (!mcHome.exists()) {

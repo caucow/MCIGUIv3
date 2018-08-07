@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 public class TaskManagerTest {
     
     public static void main(String[] args) {
-        TaskManager tm = new TaskManager(null);
+        TaskManager tm = new TaskManager(null, false);
         tm.startTaskThread();
         
         Task t = new Task("Task 1") {
