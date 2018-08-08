@@ -1,5 +1,5 @@
 {
-    "currentVersion": "3.1.5",
+    "currentVersion": "3.1.6",
     "upcoming": [
         "Upcoming:",
         "\t3.?.?",
@@ -7,6 +7,16 @@
         "\t\t* Rewrite of async code around FutureTasks rather than custom garbage."
     ],
     "versions": {
+        "3.1.6": {
+            "url": "https://github.com/caucow/MCIGUIv3/releases/download/3.1.6/MCIGUIv3.jar",
+            "size": 5922246,
+            "date": "2018-08-07T19:25:00-05:00",
+            "changelog": {
+                "changed": [
+                    "Actually actually fixed unicode in passwords. It works. Tested."
+                ]
+            }
+        },
         "3.1.5": {
             "url": "https://github.com/caucow/MCIGUIv3/releases/download/3.1.5/MCIGUIv3.jar",
             "size": 5922112,
