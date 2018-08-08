@@ -31,12 +31,16 @@ public class Authenticator {
         JsonConfig json = new JsonConfig();
         json.set("agent.name", "Minecraft");
         json.set("agent.version", 1);
-        json.set("clientToken", JsonConfig.escape(clientToken));
-        json.set("username", JsonConfig.escape(username));
-        json.set("password", JsonConfig.escape(password));
+        json.set("clientToken", clientToken);
+        json.set("username", "%1$s");
+        json.set("password", "%2$s");
         json.set("requestUser", true);
+        String pl = String.format("{\"agent\":{\"name\":\"Minecraft\",\"version\":1},\"clientToken\":\"%1$s\",\"username\":\"%2$s\",\"password\":\"%3$s\",\"requestUser\":true}",
+                clientToken,
+                escape(username),
+                escape(password));
         
-        HttpPayload response = HttpPayload.getPayload("https://authserver.mojang.com/authenticate", "POST", "application/json", json.toString());
+        HttpPayload response = HttpPayload.getPayload("https://authserver.mojang.com/authenticate", "POST", "application/json", pl);
         
         if (response.getResponseCode() >= 400) {
             getError(response);
@@ -59,8 +63,8 @@ public class Authenticator {
     
     public static AuthenticatedUser refreshAccessToken(String clientToken, AuthenticatedUser user) throws SocketTimeoutException, IOException, ForbiddenOperationException {
         JsonConfig json = new JsonConfig();
-        json.set("clientToken", JsonConfig.escape(clientToken));
-        json.set("accessToken", JsonConfig.escape(user.getAccessToken()));
+        json.set("clientToken", clientToken);
+        json.set("accessToken", user.getAccessToken());
         json.set("requestUser", true);
         
         HttpPayload response = HttpPayload.getPayload("https://authserver.mojang.com/refresh", "POST", "application/json", json.toString());
@@ -86,8 +90,8 @@ public class Authenticator {
     
     public static boolean validateAccessToken(String clientToken, AuthenticatedUser user) throws SocketTimeoutException, IOException {
         JsonConfig json = new JsonConfig();
-        json.set("clientToken", JsonConfig.escape(clientToken));
-        json.set("accessToken", JsonConfig.escape(user.getAccessToken()));
+        json.set("clientToken", clientToken);
+        json.set("accessToken", user.getAccessToken());
         
         HttpPayload response = HttpPayload.getPayload("https://authserver.mojang.com/validate", "POST", "application/json", json.toString());
         
@@ -103,8 +107,8 @@ public class Authenticator {
     
     public static boolean invalidateToken(String clientToken, String authToken) throws SocketTimeoutException, IOException {
         JsonConfig json = new JsonConfig();
-        json.set("accessToken", JsonConfig.escape(authToken));
-        json.set("clientToken", JsonConfig.escape(clientToken));
+        json.set("accessToken", authToken);
+        json.set("clientToken", clientToken);
         
         HttpPayload response = HttpPayload.getPayload("https://authserver.mojang.com/invalidate", "POST", "application/json", json.toString());
         
@@ -136,5 +140,19 @@ public class Authenticator {
             }
             throw new IOException(response.getPayload(), e);
         }
+    }
+    
+    private static String escape(String unescaped) {
+        char[] ch = unescaped.toCharArray();
+        StringBuilder e = new StringBuilder();
+        for (char c : ch) {
+            if (c == '\\' || c == '"' || c == '\n' || c == '\r' || c == '\b'
+                    || c == '\f' || c == '\t' || c < 0x20 || c > 0x7F) {
+                e.append(String.format("\\u%04x", (int)c));
+            } else {
+                e.append(c);
+            }
+        }
+        return e.toString();
     }
 }
