@@ -118,7 +118,7 @@ public class PasswordDialogPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private PasswordDialog passDialog;
-    private Result result = Result.CANCEL;
+    private Result result = Result.NONE;
     
     private void keyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_keyPressed
         switch (evt.getID()) {
@@ -180,7 +180,8 @@ public class PasswordDialogPanel extends javax.swing.JPanel {
     public enum Result {
         ACCEPT(),
         DECRYPT(),
-        CANCEL();
+        CANCEL(),
+        NONE();
     }
     
     // Variables declaration - do not modify//GEN-BEGIN:variables

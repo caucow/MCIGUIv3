@@ -22,7 +22,6 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.border.LineBorder;
@@ -83,6 +82,7 @@ public class AuthPanel extends RandomTexturedPanel {
         this.statusLabel = new JLabel("Leave password blank to log in with accounts file.");
         
         this.playAsLabel.setForeground(Color.WHITE);
+        this.playAsComboBox.setMaximumRowCount(20);
         this.playAsComboBox.setOpaque(false);
         this.playAsComboBox.setForeground(Color.WHITE);
         this.playAsComboBox.setBackground(Color.DARK_GRAY);
@@ -240,6 +240,7 @@ public class AuthPanel extends RandomTexturedPanel {
                 @Override
                 public void run() throws Exception {
                     if (loggedIn.get()) {
+                        System.out.println();
                         return;
                     }
                     if (pd.getResult() == PasswordDialogPanel.Result.CANCEL) {
