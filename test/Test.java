@@ -9,6 +9,7 @@ import javax.swing.UIManager;
  */
 public class Test {
     public static void main(String[] args) throws Exception {
+        System.out.println("RandomChange");
         System.out.println(Launcher.CD);
         System.out.println(System.getProperties().toString().replace(',', '\n'));
         RuntimeMXBean bean = java.lang.management.ManagementFactory.getRuntimeMXBean();
