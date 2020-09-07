@@ -245,7 +245,7 @@ public class GameVersion implements Comparable<GameVersion> {
         } else {
             ArgumentParser argParser = ver.args =
                     inheritedVer != null
-                    ? new ArgumentParser(inheritedVer.getArgumentParser())
+                    ? new ArgumentParser(ver.mainClass, inheritedVer.getArgumentParser())
                     : new ArgumentParser(ver.mainClass);
             JsonConfig confPath;
             confPath = json.getSubConfig("arguments.game");

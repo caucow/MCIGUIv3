@@ -55,7 +55,7 @@ public class GameMonitor extends Thread {
         try {
             launcher.addGameMonitor(this.id = UUID.randomUUID(), this);
             if (debug) {
-                this.logger.log(Level.INFO, "Started game in {} with launch arguments [full]:", cd.toString());
+                this.logger.log(Level.INFO, "Started game in {0} with launch arguments [full]:", cd.toString());
                 this.logger.info(args.toString());
             }
             boolean cleanExit = false;

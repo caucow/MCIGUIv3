@@ -376,10 +376,10 @@ public final class Launcher {
                 aboutWindow.setUpdateSuccess(vers);
                 String cVer = vers.getCurrentVersion();
                 if (!cVer.equals(LAUNCHER_VERSION)) {
-                    LOGGER.log(Level.INFO, "Update found: {0}", vers.getCurrentVersion());
+                    LOGGER.log(Level.INFO, "Update found: {0} -> {1}", new Object[] {LAUNCHER_VERSION, vers.getCurrentVersion()});
                     launcherPanel.getControlPanel().setUpdateAvailable();
                 } else {
-                    LOGGER.log(Level.INFO, "MCIGUI is up to date.");
+                    LOGGER.log(Level.INFO, "MCIGUI is up to date. (Running: {0} Latest: {1})", new Object[] {LAUNCHER_VERSION, vers.getCurrentVersion()});
                 }
             } catch (Exception e) {
                 LOGGER.log(Level.INFO, "Unable to check for updates", e);

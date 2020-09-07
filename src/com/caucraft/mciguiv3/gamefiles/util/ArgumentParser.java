@@ -27,9 +27,9 @@ public class ArgumentParser {
         this.gameArgs = new ArrayList<>();
     }
     
-    public ArgumentParser(ArgumentParser copy) {
+    public ArgumentParser(String mainClass, ArgumentParser copy) {
         this.jvmArgs = new ArrayList(copy.jvmArgs);
-        this.mainClass = copy.mainClass;
+        this.mainClass = mainClass;
         this.gameArgs = new ArrayList(copy.gameArgs);
     }
     
