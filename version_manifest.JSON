@@ -7,6 +7,17 @@
         "\t\t* Rewrite of async code around FutureTasks rather than custom garbage."
     ],
     "versions": {
+        "3.1.8": {
+            "url": "https://github.com/caucow/MCIGUIv3/releases/download/3.1.8/MCIGUIv3.jar",
+            "size": 5923735,
+            "date": "2020-09-07T15:22:00-05:00",
+            "changelog": {
+                "added": [
+                    "Support for versions with inherited launch args (OptiFine)",
+                    "Hold Ctrl+Alt+Shift and click Play to print full launch args"
+                ]
+            }
+        },
         "3.1.7": {
             "url": "https://github.com/caucow/MCIGUIv3/releases/download/3.1.7/MCIGUIv3.jar",
             "size": 5922482,
