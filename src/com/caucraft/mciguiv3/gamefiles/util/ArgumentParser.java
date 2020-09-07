@@ -22,9 +22,15 @@ public class ArgumentParser {
     }
     
     public ArgumentParser(String mainClass) {
-        jvmArgs = new ArrayList<>();
+        this.jvmArgs = new ArrayList<>();
         this.mainClass = mainClass;
-        gameArgs = new ArrayList<>();
+        this.gameArgs = new ArrayList<>();
+    }
+    
+    public ArgumentParser(ArgumentParser copy) {
+        this.jvmArgs = new ArrayList(copy.jvmArgs);
+        this.mainClass = copy.mainClass;
+        this.gameArgs = new ArrayList(copy.gameArgs);
     }
     
     public void addJvmArg(Argument arg) {

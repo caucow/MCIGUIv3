@@ -144,6 +144,10 @@ public class GameVersion implements Comparable<GameVersion> {
         json.load(jsonFile);
         GameVersion ver = new GameVersion();
         ver.inheritsFrom = json.getString("inheritsFrom", null);
+        GameVersion inheritedVer =
+                ver.inheritsFrom != null
+                ? getGameVersion(mcHome, ver.inheritsFrom)
+                : null;
         JsonConfig sub = json.getSubConfig("assetIndex");
         if (sub != null) {
             ver.assets = new AssetIndexInfo(
@@ -152,8 +156,8 @@ public class GameVersion implements Comparable<GameVersion> {
                     json.getLong("assetIndex.size", 0),
                     json.getString("assetIndex.url", null),
                     json.getLong("assetIndex.totalSize", 0));
-        } else if (ver.inheritsFrom != null) {
-            ver.assets = getGameVersion(mcHome, ver.inheritsFrom).getAssets();
+        } else if (inheritedVer != null) {
+            ver.assets = inheritedVer.getAssets();
         }
         ver.id = Objects.requireNonNull(json.getString("id", null));
         ver.mainClass = Objects.requireNonNull(json.getString("mainClass", null));
@@ -239,130 +243,140 @@ public class GameVersion implements Comparable<GameVersion> {
             argParser.addJvmArg(new Argument("-cp", null));
             argParser.addJvmArg(new Argument("${classpath}", null));
         } else {
-            ArgumentParser argParser = ver.args = new ArgumentParser(ver.mainClass);
-            JsonArray a = json.getSubConfig("arguments.game").getRootElement().getAsJsonArray();
-            for (JsonElement arg : a) {
-                if (arg.isJsonPrimitive()) {
-                    argParser.addGameArg(new Argument(arg.getAsString(), null));
-                    continue;
-                }
-                sub = new JsonConfig(arg);
-                JsonElement value = sub.get("value");
-                if (value != null) {
-                    List<Rule> rules = null;
-                    JsonConfig jsonRules = sub.getSubConfig("rules");
-                    if (jsonRules != null) {
-                        rules = new ArrayList<>();
-                        JsonArray rulesArray = jsonRules.getRootElement().getAsJsonArray();
-                        for (JsonElement eRule : rulesArray) {
-                            JsonConfig jsonRule = new JsonConfig(eRule);
-                            final boolean allow = jsonRule.getString("action", "allow").equals("allow");
-                            for (String ruleMain : jsonRule.getKeys("")) {
-                                if (!ruleMain.equals("action")) {
-                                    JsonConfig jsonSubRule = jsonRule.getSubConfig("[\"" + ruleMain + "\"]");
-                                    for (String ruleSub : jsonSubRule.getKeys("")) {
-                                        rules.add((Rule) (Map<String, String> props, boolean passing)
-                                                -> props.get(ruleMain + '.' + ruleSub)
-                                                        .matches(jsonSubRule.get("[\"" + ruleSub + "\"]").getAsString()) ? allow : passing);
+            ArgumentParser argParser = ver.args =
+                    inheritedVer != null
+                    ? new ArgumentParser(inheritedVer.getArgumentParser())
+                    : new ArgumentParser(ver.mainClass);
+            JsonConfig confPath;
+            confPath = json.getSubConfig("arguments.game");
+            if (confPath != null) {
+                JsonArray a = confPath.getRootElement().getAsJsonArray();
+                for (JsonElement arg : a) {
+                    if (arg.isJsonPrimitive()) {
+                        argParser.addGameArg(new Argument(arg.getAsString(), null));
+                        continue;
+                    }
+                    sub = new JsonConfig(arg);
+                    JsonElement value = sub.get("value");
+                    if (value != null) {
+                        List<Rule> rules = null;
+                        JsonConfig jsonRules = sub.getSubConfig("rules");
+                        if (jsonRules != null) {
+                            rules = new ArrayList<>();
+                            JsonArray rulesArray = jsonRules.getRootElement().getAsJsonArray();
+                            for (JsonElement eRule : rulesArray) {
+                                JsonConfig jsonRule = new JsonConfig(eRule);
+                                final boolean allow = jsonRule.getString("action", "allow").equals("allow");
+                                for (String ruleMain : jsonRule.getKeys("")) {
+                                    if (!ruleMain.equals("action")) {
+                                        JsonConfig jsonSubRule = jsonRule.getSubConfig("[\"" + ruleMain + "\"]");
+                                        for (String ruleSub : jsonSubRule.getKeys("")) {
+                                            rules.add((Rule) (Map<String, String> props, boolean passing)
+                                                    -> props.get(ruleMain + '.' + ruleSub)
+                                                            .matches(jsonSubRule.get("[\"" + ruleSub + "\"]").getAsString()) ? allow : passing);
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                    if (value.isJsonPrimitive()) {
-                        argParser.addGameArg(new Argument(value.getAsString(), rules));
+                        if (value.isJsonPrimitive()) {
+                            argParser.addGameArg(new Argument(value.getAsString(), rules));
+                        } else {
+                            for (JsonElement val : value.getAsJsonArray()) {
+                                argParser.addGameArg(new Argument(val.getAsString(), rules));
+                            }
+                        }
                     } else {
+                        List<Rule> rules = null;
+                        JsonConfig jsonRules = sub.getSubConfig("compatibilityRules");
+                        if (jsonRules != null) {
+                            rules = new ArrayList<>();
+                            JsonArray rulesArray = jsonRules.getRootElement().getAsJsonArray();
+                            for (JsonElement eRule : rulesArray) {
+                                JsonConfig jsonRule = new JsonConfig(eRule);
+                                final boolean allow = jsonRule.getString("action", "allow").equals("allow");
+                                for (String ruleMain : jsonRule.getKeys("")) {
+                                    if (!ruleMain.equals("action")) {
+                                        JsonConfig jsonSubRule = jsonRule.getSubConfig("[\"" + ruleMain + "\"]");
+                                        for (String ruleSub : jsonSubRule.getKeys("")) {
+                                            rules.add((Rule) (Map<String, String> props, boolean passing)
+                                                    -> props.get(ruleMain + '.' + ruleSub)
+                                                            .matches(jsonSubRule.get("[\"" + ruleSub + "\"]").getAsString()) ? allow : passing);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        value = sub.get("values");
                         for (JsonElement val : value.getAsJsonArray()) {
                             argParser.addGameArg(new Argument(val.getAsString(), rules));
                         }
                     }
-                } else {
-                    List<Rule> rules = null;
-                    JsonConfig jsonRules = sub.getSubConfig("compatibilityRules");
-                    if (jsonRules != null) {
-                        rules = new ArrayList<>();
-                        JsonArray rulesArray = jsonRules.getRootElement().getAsJsonArray();
-                        for (JsonElement eRule : rulesArray) {
-                            JsonConfig jsonRule = new JsonConfig(eRule);
-                            final boolean allow = jsonRule.getString("action", "allow").equals("allow");
-                            for (String ruleMain : jsonRule.getKeys("")) {
-                                if (!ruleMain.equals("action")) {
-                                    JsonConfig jsonSubRule = jsonRule.getSubConfig("[\"" + ruleMain + "\"]");
-                                    for (String ruleSub : jsonSubRule.getKeys("")) {
-                                        rules.add((Rule) (Map<String, String> props, boolean passing)
-                                                -> props.get(ruleMain + '.' + ruleSub)
-                                                        .matches(jsonSubRule.get("[\"" + ruleSub + "\"]").getAsString()) ? allow : passing);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    value = sub.get("values");
-                    for (JsonElement val : value.getAsJsonArray()) {
-                        argParser.addGameArg(new Argument(val.getAsString(), rules));
-                    }
                 }
             }
-            a = json.getSubConfig("arguments.jvm").getRootElement().getAsJsonArray();
-            for (JsonElement arg : a) {
-                if (arg.isJsonPrimitive()) {
-                    argParser.addJvmArg(new Argument(arg.getAsString(), null));
-                    continue;
-                }
-                sub = new JsonConfig(arg);
-                JsonElement value = sub.get("value");
-                if (value != null) {
-                    List<Rule> rules = null;
-                    JsonConfig jsonRules = sub.getSubConfig("rules");
-                    if (jsonRules != null) {
-                        rules = new ArrayList<>();
-                        JsonArray rulesArray = jsonRules.getRootElement().getAsJsonArray();
-                        for (JsonElement eRule : rulesArray) {
-                            JsonConfig jsonRule = new JsonConfig(eRule);
-                            final boolean allow = jsonRule.getString("action", "allow").equals("allow");
-                            for (String ruleMain : jsonRule.getKeys("")) {
-                                if (!ruleMain.equals("action")) {
-                                    JsonConfig jsonSubRule = jsonRule.getSubConfig("[\"" + ruleMain + "\"]");
-                                    for (String ruleSub : jsonSubRule.getKeys("")) {
-                                        rules.add((Rule) (Map<String, String> props, boolean passing)
-                                                -> props.get(ruleMain + '.' + ruleSub)
-                                                        .matches(jsonSubRule.get("[\"" + ruleSub + "\"]").getAsString()) ? allow : passing);
+            confPath = json.getSubConfig("arguments.jvm");
+            if (confPath != null) {
+                JsonArray a = confPath.getRootElement().getAsJsonArray();
+                for (JsonElement arg : a) {
+                    if (arg.isJsonPrimitive()) {
+                        argParser.addJvmArg(new Argument(arg.getAsString(), null));
+                        continue;
+                    }
+                    sub = new JsonConfig(arg);
+                    JsonElement value = sub.get("value");
+                    if (value != null) {
+                        List<Rule> rules = null;
+                        JsonConfig jsonRules = sub.getSubConfig("rules");
+                        if (jsonRules != null) {
+                            rules = new ArrayList<>();
+                            JsonArray rulesArray = jsonRules.getRootElement().getAsJsonArray();
+                            for (JsonElement eRule : rulesArray) {
+                                JsonConfig jsonRule = new JsonConfig(eRule);
+                                final boolean allow = jsonRule.getString("action", "allow").equals("allow");
+                                for (String ruleMain : jsonRule.getKeys("")) {
+                                    if (!ruleMain.equals("action")) {
+                                        JsonConfig jsonSubRule = jsonRule.getSubConfig("[\"" + ruleMain + "\"]");
+                                        for (String ruleSub : jsonSubRule.getKeys("")) {
+                                            rules.add((Rule) (Map<String, String> props, boolean passing)
+                                                    -> props.get(ruleMain + '.' + ruleSub)
+                                                            .matches(jsonSubRule.get("[\"" + ruleSub + "\"]").getAsString()) ? allow : passing);
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                    if (value.isJsonPrimitive()) {
-                        argParser.addJvmArg(new Argument(value.getAsString(), rules));
+                        if (value.isJsonPrimitive()) {
+                            argParser.addJvmArg(new Argument(value.getAsString(), rules));
+                        } else {
+                            for (JsonElement val : value.getAsJsonArray()) {
+                                argParser.addJvmArg(new Argument(val.getAsString(), rules));
+                            }
+                        }
                     } else {
+                        List<Rule> rules = null;
+                        JsonConfig jsonRules = sub.getSubConfig("compatibilityRules");
+                        if (jsonRules != null) {
+                            rules = new ArrayList<>();
+                            JsonArray rulesArray = jsonRules.getRootElement().getAsJsonArray();
+                            for (JsonElement eRule : rulesArray) {
+                                JsonConfig jsonRule = new JsonConfig(eRule);
+                                final boolean allow = jsonRule.getString("action", "allow").equals("allow");
+                                for (String ruleMain : jsonRule.getKeys("")) {
+                                    if (!ruleMain.equals("action")) {
+                                        JsonConfig jsonSubRule = jsonRule.getSubConfig("[\"" + ruleMain + "\"]");
+                                        for (String ruleSub : jsonSubRule.getKeys("")) {
+                                            rules.add((Rule) (Map<String, String> props, boolean passing)
+                                                    -> props.get(ruleMain + '.' + ruleSub)
+                                                            .matches(jsonSubRule.get("[\"" + ruleSub + "\"]").getAsString()) ? allow : passing);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        value = sub.get("values");
                         for (JsonElement val : value.getAsJsonArray()) {
                             argParser.addJvmArg(new Argument(val.getAsString(), rules));
                         }
-                    }
-                } else {
-                    List<Rule> rules = null;
-                    JsonConfig jsonRules = sub.getSubConfig("compatibilityRules");
-                    if (jsonRules != null) {
-                        rules = new ArrayList<>();
-                        JsonArray rulesArray = jsonRules.getRootElement().getAsJsonArray();
-                        for (JsonElement eRule : rulesArray) {
-                            JsonConfig jsonRule = new JsonConfig(eRule);
-                            final boolean allow = jsonRule.getString("action", "allow").equals("allow");
-                            for (String ruleMain : jsonRule.getKeys("")) {
-                                if (!ruleMain.equals("action")) {
-                                    JsonConfig jsonSubRule = jsonRule.getSubConfig("[\"" + ruleMain + "\"]");
-                                    for (String ruleSub : jsonSubRule.getKeys("")) {
-                                        rules.add((Rule) (Map<String, String> props, boolean passing)
-                                                -> props.get(ruleMain + '.' + ruleSub)
-                                                        .matches(jsonSubRule.get("[\"" + ruleSub + "\"]").getAsString()) ? allow : passing);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    value = sub.get("values");
-                    for (JsonElement val : value.getAsJsonArray()) {
-                        argParser.addJvmArg(new Argument(val.getAsString(), rules));
                     }
                 }
             }
