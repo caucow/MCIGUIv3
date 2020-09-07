@@ -29,8 +29,9 @@ public class GameMonitor extends Thread {
     private final LaunchInfo launchInfo;
     private Process gameProc;
     private UUID id;
+    private final boolean debug;
     
-    public GameMonitor(LogPanel logPanel, Logger logger, Launcher launcher, List<String> args, File cd, File nativeDir, LaunchInfo launchInfo) {
+    public GameMonitor(LogPanel logPanel, Logger logger, Launcher launcher, List<String> args, File cd, File nativeDir, LaunchInfo launchInfo, boolean debug) {
         this.logPanel = logPanel;
         this.logger = logger;
         this.launcher = launcher;
@@ -39,6 +40,7 @@ public class GameMonitor extends Thread {
         this.nativeDir = nativeDir;
         this.launchInfo = launchInfo;
         this.setDaemon(true);
+        this.debug = debug;
     }
     
     public void killProcess() {
@@ -52,6 +54,10 @@ public class GameMonitor extends Thread {
     public void run() {
         try {
             launcher.addGameMonitor(this.id = UUID.randomUUID(), this);
+            if (debug) {
+                this.logger.log(Level.INFO, "Started game in {} with launch arguments [full]:", cd.toString());
+                this.logger.info(args.toString());
+            }
             boolean cleanExit = false;
             gameProc = new ProcessBuilder(args).directory(cd).redirectErrorStream(true).start();
             BufferedReader stdout = new BufferedReader(new InputStreamReader(gameProc.getInputStream()));

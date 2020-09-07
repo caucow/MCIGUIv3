@@ -53,7 +53,8 @@ public class GameRunnerTask extends TaskList {
             boolean errorDialogs,
             Map<String, String> properties,
             boolean canDownloadFiles,
-            String extraJvmArgs) {
+            String extraJvmArgs,
+            boolean debug) {
         super("Starting game (" + versionId + ")");
         
         this.launcher = launcher;
@@ -167,7 +168,7 @@ public class GameRunnerTask extends TaskList {
                     
                     List<String> gameArgs = version.getArgumentParser().compile(javaExe.getPath(), extraJvmArgs == null ? null : Arrays.asList(extraJvmArgs.split(" ")), properties, null);
                     
-                    GameMonitor gmon = new GameMonitor(logPanel, logger, launcher, gameArgs, gameDir, nativeDir, GameRunnerTask.this.launchInfo);
+                    GameMonitor gmon = new GameMonitor(logPanel, logger, launcher, gameArgs, gameDir, nativeDir, GameRunnerTask.this.launchInfo, debug);
                     gmon.start();
                 }
             });

@@ -161,7 +161,8 @@ public class ControlPanel extends RandomTexturedPanel {
             launcher.reloadAuthDisplay(false);
         });
         this.launchButton.addActionListener((ActionEvent e) -> {
-            launcher.launchGame();
+            launcher.launchGame((e.getModifiers() & (ActionEvent.CTRL_MASK | ActionEvent.ALT_MASK | ActionEvent.SHIFT_MASK))
+                    == (ActionEvent.CTRL_MASK | ActionEvent.ALT_MASK | ActionEvent.SHIFT_MASK));
         });
         this.logoPanel.addMouseListener(new MouseAdapter() {
             @Override

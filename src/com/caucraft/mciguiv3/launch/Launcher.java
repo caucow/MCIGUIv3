@@ -600,7 +600,7 @@ public final class Launcher {
         return user;
     }
     
-    public void launchGame() {
+    public void launchGame(boolean debug) {
         profiles.save(true);
         config.save();
         
@@ -640,7 +640,8 @@ public final class Launcher {
                         props.put("resolution_width", "854");
                         props.put("resolution_height", "480");
                     }
-
+                    
+                    props.put("user_properties", "{}"); // TODO actually get user properties
                     props.put("auth_player_name", user.getDisplayName());
                     props.put("auth_uuid", user.getId().toString());
                     props.put("auth_access_token", user.getAccessToken());
@@ -660,7 +661,8 @@ public final class Launcher {
                             true,
                             props,
                             getLoggedInOnce(),
-                            p.getJavaArgs()
+                            p.getJavaArgs(),
+                            debug
                     );
                     mainTaskMgr.addTask(runner);
                     mainTaskMgr.addTask(runner.getCancelTask());
@@ -841,7 +843,8 @@ public final class Launcher {
                         props.put("resolution_width", "854");
                         props.put("resolution_height", "480");
                     }
-
+                    
+                    props.put("user_properties", "{}"); // TODO actually get user properties
                     props.put("auth_player_name", usera[0].getDisplayName());
                     props.put("auth_uuid", usera[0].getId().toString());
                     props.put("auth_access_token", usera[0].getAccessToken());
@@ -861,7 +864,8 @@ public final class Launcher {
                             true,
                             props,
                             getLoggedInOnce(),
-                            p.getJavaArgs()
+                            p.getJavaArgs(),
+                            debug
                     );
                     mainTaskMgr.addTask(runner);
                     mainTaskMgr.addTask(runner.getCancelTask());
