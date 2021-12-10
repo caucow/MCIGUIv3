@@ -1,7 +1,7 @@
 package com.caucraft.mciguiv3.gamefiles.util;
 
-import com.caucraft.util.JsonConfig;
 import com.caucraft.mciguiv3.launch.Launcher;
+import com.caucraft.util.JsonConfig;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import java.io.File;
@@ -88,20 +88,6 @@ public abstract class Library {
                     sub.getLong("size", 0),
                     sub.getString("sha1", null),
                     sub.getString("url", null));
-        } else {
-            String url = json.getString("url", null);
-            if (url != null) {
-                //TODO make this URL format work:
-                /*
-                  "libraries": [
-                    {
-                      "name": "net.fabricmc:tiny-mappings-parser:0.2.2.14",
-                      "url": "https://maven.fabricmc.net/"
-                    }
-                  ]
-                */
-                download = new Download(0, null, url);
-            }
         }
         sub = json.getSubConfig("downloads.classifiers");
         Map<String, Download> classifiers = null;

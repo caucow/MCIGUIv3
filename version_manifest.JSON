@@ -1,5 +1,5 @@
 {
-    "currentVersion": "3.1.9",
+    "currentVersion": "3.2.0",
     "upcoming": [
         "Upcoming:",
         "\t3.?.?",
@@ -7,6 +7,29 @@
         "\t\t* Rewrite of async code around FutureTasks rather than custom garbage."
     ],
     "versions": {
+        "3.2.0": {
+            "url": "https://github.com/caucow/MCIGUIv3/releases/download/3.2.0/MCIGUIv3.jar",
+            "size": 5930558,
+            "date": "2021-12-11T02:33:00-05:00",
+            "changelog": {
+                "added": [
+                    "Supports the 'logging' property of version.jsons now"
+                ]
+            },
+            "installNotes": [
+                "Adds support for Mojang's Log4J exploit fix BUT DOES NOT AUTOMATICALLY DOWNLOAD THE FIX!!!",
+                "YOU MUST REINSTALL YOUR GAME VERSIONS TO MAKE USE OF THIS!!!",
+                "Also, STOP USING THIS LAUNCHER WTFWTF IT'S SO BAD",
+                "One of the reasons for my making version 3 of this launcher was to *prevent* automatically downloading game updates.",
+                "As bad of practice as that is, up until roughly 2 weeks ago it hasn't been an active, well known and serious threat.",
+                "At this point however, there's been over a year of stagnation in development, lots of inconsistencies between what this",
+                "launcher and the official launcher supports, inability to launch a Realms-compatible game instance somehow, bugs and missing",
+                "features left unattended, and now a massive exploit in Log4j, which this launcher has never properly supported logging from.",
+                "Eventually I'll get around to FullRewriteIV-TheFourth and release MCIGUIv4, but this has always been a personal project for",
+                "funzies. If you're still here, stop, get some help, switch to MultiMC or something.",
+                "This will likely be the last update until I scrap this version of MCIGUI and move on to the next."
+            ]
+        },
         "3.1.9": {
             "url": "https://github.com/caucow/MCIGUIv3/releases/download/3.1.9/MCIGUIv3.jar",
             "size": 5923926,
