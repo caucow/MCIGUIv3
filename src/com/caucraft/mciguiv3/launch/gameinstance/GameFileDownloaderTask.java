@@ -5,6 +5,7 @@ import com.caucraft.mciguiv3.gamefiles.assets.AssetIndex;
 import com.caucraft.mciguiv3.gamefiles.assets.AssetIndexInfo;
 import com.caucraft.mciguiv3.gamefiles.util.Download;
 import com.caucraft.mciguiv3.gamefiles.util.Library;
+import com.caucraft.mciguiv3.gamefiles.util.LoggingData;
 import com.caucraft.mciguiv3.gamefiles.util.ValidGameFileSet;
 import com.caucraft.mciguiv3.gamefiles.versions.GameVersion;
 import com.caucraft.mciguiv3.launch.Launcher;
@@ -13,6 +14,7 @@ import com.caucraft.mciguiv3.util.TaskList;
 import com.caucraft.mciguiv3.util.Util;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -34,9 +36,11 @@ public class GameFileDownloaderTask extends TaskList {
         Set<String> assetIds = new HashSet<>();
         List<Asset> assets = new ArrayList<>();
         List<Library> libs = new ArrayList<>();
+        LoggingData[] logConfigHolder = new LoggingData[1];
         TaskList missingGame = new TaskList("Downloading version jar", true);
         TaskList missingAssets = new TaskList("Downloading assets", true);
         TaskList missingLibs = new TaskList("Downloading libraries", true);
+        TaskList missingLogging = new TaskList("Downloading logging config", true);
         
         this.addTask(new Task("Loading version JSON(s)") {
             @Override
@@ -106,6 +110,7 @@ public class GameFileDownloaderTask extends TaskList {
                         libs.addAll(parent.getNatives());
                         checkedVersions.add(parent.getId());
                     }
+                    logConfigHolder[0] = version.getLoggingData();
                 } catch (Exception e) {
                     logger.log(Level.WARNING, "Could not open version JSON for " + curVerName + ". Try reinstalling it.", e);
                     throw e;
@@ -164,8 +169,34 @@ public class GameFileDownloaderTask extends TaskList {
                 }
             }
         });
+        this.addTask(new Task("Verifying logging config") {
+            
+            @Override
+            public float getProgress() {
+                return -1;
+            }
+            
+            @Override
+            public void run() throws Exception {
+                LoggingData logConfig = logConfigHolder[0];
+                if (logConfig == null) {
+                    return;
+                }
+                File logCfgFile = Paths.get(mcHome.getPath(), logConfig.getFileName()).toFile();
+                Download logDl = logConfig.getDownload();
+                if (logDl == null) {
+                    return;
+                }
+                if (!logDl.validateFile(validFiles, logCfgFile)) {
+                    missingLogging.addTask(Util.getFileDownloadTask(
+                            "Downloading log config " + logConfig.getFileName(),
+                            logCfgFile, logDl.getUrl(), logDl.getSize()));
+                }
+            }
+        });
         this.addTask(missingGame);
         this.addTask(missingAssets);
         this.addTask(missingLibs);
+        this.addTask(missingLogging);
     }
 }

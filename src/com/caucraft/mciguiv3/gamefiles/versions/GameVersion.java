@@ -6,6 +6,7 @@ import com.caucraft.mciguiv3.gamefiles.util.Rule;
 import com.caucraft.mciguiv3.gamefiles.util.Download;
 import com.caucraft.mciguiv3.gamefiles.util.Argument;
 import com.caucraft.mciguiv3.gamefiles.util.ArgumentParser;
+import com.caucraft.mciguiv3.gamefiles.util.LoggingData;
 import com.caucraft.util.JsonConfig;
 import com.caucraft.mciguiv3.launch.Launcher;
 import com.caucraft.mciguiv3.util.Util;
@@ -43,10 +44,15 @@ public class GameVersion implements Comparable<GameVersion> {
     private String type;
     private final List<Library.CodeLibrary> libraries;
     private final List<Library.NativeLibrary> natives;
+    private LoggingData loggingData;
     
     private GameVersion() {
         libraries = new ArrayList<>();
         natives = new ArrayList<>();
+    }
+    
+    public LoggingData getLoggingData() {
+        return loggingData;
     }
     
     public AssetIndexInfo getAssets() {
@@ -158,6 +164,7 @@ public class GameVersion implements Comparable<GameVersion> {
                     json.getLong("assetIndex.totalSize", 0));
         } else if (inheritedVer != null) {
             ver.assets = inheritedVer.getAssets();
+            ver.loggingData = inheritedVer.getLoggingData();
         }
         ver.id = Objects.requireNonNull(json.getString("id", null));
         ver.mainClass = Objects.requireNonNull(json.getString("mainClass", null));
@@ -198,6 +205,14 @@ public class GameVersion implements Comparable<GameVersion> {
             ver.serverDownload = new Download(
                     sub.getLong("size", 0), sub.getString("sha1", null), sub.getString("url", null));
         }
+        sub = json.getSubConfig("logging.client");
+        if (sub != null) {
+            Download loggingDownload = new Download(
+                    sub.getInt("file.size", 0),
+                    sub.getString("file.sha1", null),
+                    sub.getString("file.url", null));
+            ver.loggingData = new LoggingData(sub.getString("argument", null), sub.getString("file.id", null), loggingDownload, sub.getString("type", null));
+        }
         sub = json.getSubConfig("libraries");
         if (sub != null) {
             JsonArray a = sub.getRootElement().getAsJsonArray();
@@ -217,6 +232,10 @@ public class GameVersion implements Comparable<GameVersion> {
             for (String s : args.split(" ")) {
                 argParser.addGameArg(new Argument(s, null));
             }
+            if (ver.getLoggingData() != null) {
+                LoggingData logConfig = ver.getLoggingData();
+                argParser.addJvmArg(new Argument(logConfig.getJvmArg(), null));
+            }
             List<Rule> rules = new ArrayList<>();
             rules.add((Rule) (Map<String, String> props, boolean passing) -> props.get("features.is_demo_user").matches("true") ? true : passing);
             argParser.addGameArg(new Argument("--demo", rules));
@@ -235,7 +254,7 @@ public class GameVersion implements Comparable<GameVersion> {
             rules = new ArrayList<>();
             rules.add((Rule) (Map<String, String> props, boolean passing) -> props.get("os.name").matches("windows") ? true : passing);
             rules.add((Rule) (Map<String, String> props, boolean passing) -> props.get("os.version").matches("^10\\.") ? true : passing);
-            argParser.addJvmArg(new Argument("-Dos.name=Windows 10", rules));
+            argParser.addJvmArg(new Argument("-Dos.name=Windows 10", rules)); // TODO LMAO WHY IS THIS HARDCODED
             argParser.addJvmArg(new Argument("-Dos.version=10.0", rules));
             argParser.addJvmArg(new Argument("-Djava.library.path=${natives_directory}", null));
             argParser.addJvmArg(new Argument("-Dminecraft.launcher.brand=${launcher_name}", null));
@@ -247,6 +266,10 @@ public class GameVersion implements Comparable<GameVersion> {
                     inheritedVer != null
                     ? new ArgumentParser(ver.mainClass, inheritedVer.getArgumentParser())
                     : new ArgumentParser(ver.mainClass);
+            if (ver.getLoggingData() != null) {
+                LoggingData logConfig = ver.getLoggingData();
+                argParser.addJvmArg(new Argument(logConfig.getJvmArg(), null));
+            }
             JsonConfig confPath;
             confPath = json.getSubConfig("arguments.game");
             if (confPath != null) {

@@ -1,6 +1,7 @@
 package com.caucraft.mciguiv3.launch.gameinstance;
 
 import com.caucraft.mciguiv3.gamefiles.util.Library;
+import com.caucraft.mciguiv3.gamefiles.util.LoggingData;
 import com.caucraft.mciguiv3.gamefiles.util.ValidGameFileSet;
 import com.caucraft.mciguiv3.gamefiles.versions.GameVersion;
 import com.caucraft.mciguiv3.launch.Launcher;
@@ -165,6 +166,11 @@ public class GameRunnerTask extends TaskList {
                     properties.put("assets_index_name", version.getAssets().getId());
                     properties.put("natives_directory", nativeDir.getPath());
                     properties.put("classpath", classPath.toString());
+                    
+                    LoggingData logConfig = version.getLoggingData();
+                    if (logConfig != null) {
+                        properties.put("path", new File(mcHome, logConfig.getFileName()).toString());
+                    }
                     
                     List<String> gameArgs = version.getArgumentParser().compile(javaExe.getPath(), extraJvmArgs == null ? null : Arrays.asList(extraJvmArgs.split(" ")), properties, null);
                     

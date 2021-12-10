@@ -106,7 +106,9 @@ public final class Launcher {
         File cd = new File(".");
         try {
             cd = cd.toPath().toRealPath().toFile();
-        } catch (IOException e) {}
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Could not resolve current directory?????", e);
+        }
         CD = cd;
         CD_PATH = cd.toPath();
         LAUNCHER_DIR = new File(CD, "MCIGUI");
