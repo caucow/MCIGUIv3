@@ -31,7 +31,10 @@ public abstract class Library {
         this.name = name;
         String[] spl = name.split(":");
         this.path = String.format("%s/%s/%s", spl[0].replace('.', '/'), spl[1], spl[2]);
-        this.filename = spl[1] + '-' + spl[2];
+        this.filename = spl[1];
+        for (int i = 2; i < spl.length; i++) {
+            this.filename += '-' + spl[i];
+        }
         this.download = download;
         this.classifiers = classifiers;
     }

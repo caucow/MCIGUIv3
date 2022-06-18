@@ -47,7 +47,7 @@ public class LauncherProfiles {
         try {
             ProfileManager newProfiles = new ProfileManager(newJson.getSubConfig("profiles"));
             String newSelectedProfile = newJson.getString("selectedProfile", null);
-            String newClientToken = Objects.requireNonNull(newJson.getString("clientToken", null));
+            String newClientToken = Objects.requireNonNull(newJson.getString("clientToken", UUID.randomUUID().toString())); // TODO this defaulted to null, let it do that
             AuthenticationDatabase newAuthdb = new AuthenticationDatabase(newJson.getSubConfig("authenticationDatabase"));
             AuthenticatedUser newUser = newAuthdb.getUserByUUIDKey(newJson.getString("selectedUser", null));
             this.json = newJson;
